@@ -15,7 +15,7 @@ use Drupal\Core\TypedData\DataDefinition;
  *   label = @Translation("Stock level"),
  *   module = "commerce_stock_field",
  *   description = @Translation("Stock level"),
- *   default_widget = "commerce_stock_level_simple",
+ *   default_widget = "default_stock_level_widget",
  *   default_formatter = "commerce_stock_level_simple"
  * )
  */
@@ -90,7 +90,9 @@ class StockLevel extends FieldItemBase {
       $stockServiceManager = \Drupal::service('commerce_stock.service_manager');
       $entity = $this->getEntity();
       if (empty($entity->id())) {
-        return;
+        if (array_key_exists('value', $values)) {
+         parent::setValue($values, $notify);
+        }
       }
       // @todo Figure out why sometimes this is called twice.
       if (isset($called[$entity->getEntityTypeId() . $entity->id()])) {
@@ -137,6 +139,22 @@ class StockLevel extends FieldItemBase {
         $stockServiceManager->createTransaction($entity, $location->getId(), $zone, $transaction_qty, $unit_cost, $transaction_type, $metadata);
       }
     }
+  }
+
+  /**
+   * @inheritdoc
+   */
+  public function postSave($update){
+
+    // We only need to handle the entity creation here. Further transactions
+    // are handled in setValue().
+    if($update){
+      return;
+    }
+    $entity = $this->getEntity();
+
+    // @Todo Create a transaction with the initial stock level entry, if any.
+    // Use STOCK_IN type.
   }
 
 }
