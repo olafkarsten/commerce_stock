@@ -3,14 +3,8 @@
 namespace Drupal\commerce_stock_field\Plugin\Field\FieldWidget;
 
 use Drupal\commerce\PurchasableEntityInterface;
-use Drupal\commerce_stock\StockServiceManager;
-use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Link;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'absolute_commerce_stock_level' widget.
@@ -19,7 +13,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   id = "commerce_stock_level_absolute",
  *   module = "commerce_stock_field",
  *   label = @Translation("Absolute stock level widget"),
- *   description = @Translation("Sets the absolute stock level. You will loose all the glamour of transaction based stock handling. We recommend using the simple stock transaction widget. Learn more in the documentation."),
+ *   description = @Translation("Sets the absolute stock level. You will loose
+ *   all the glamour of transaction based stock handling. We recommend using
+ *   the simple stock transaction widget. Learn more in the documentation."),
  *   field_types = {
  *     "commerce_stock_level"
  *   }
@@ -27,6 +23,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class AbsoluteStockLevelWidget extends StockLevelWidgetBase {
 
+  /**
+   * Submits the form.
+   *
+   * @param $form
+   *   The form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
   public function submitForm($form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
     // @ToDo figure out the correct value for level to put in the message here.
@@ -45,7 +49,13 @@ class AbsoluteStockLevelWidget extends StockLevelWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
+  public function formElement(
+    FieldItemListInterface $items,
+    $delta,
+    array $element,
+    array &$form,
+    FormStateInterface $form_state
+  ) {
     $field = $items->first();
     $entity = $items->getEntity();
 
@@ -61,28 +71,28 @@ class AbsoluteStockLevelWidget extends StockLevelWidgetBase {
 
     // If not a valid context.
     if (!$this->stockServiceManager->isValidContext($entity)) {
-        // Return an empty form.
-        return [];
+      // Return an empty form.
+      return [];
     }
 
     // Get the available stock level.
     $level = $field->available_stock;
 
-    $elements = [];
+    $element = [];
     if (empty($entity->id())) {
       // We don't have a product ID as yet.
-      $elements['label'] = [
+      $element['label'] = [
         '#type' => 'html_tag',
         '#tag' => 'strong',
         '#value' => $this->t('In order to set the stock level you need to save the product first!'),
       ];
     }
     else {
-      $elements['stocked_entity'] = [
+      $element['stocked_entity'] = [
         '#type' => 'value',
         '#value' => $entity,
       ];
-      $elements['value'] = [
+      $element['value'] = [
         '#title' => $this->t('Set the stock level'),
         '#description' => $this->t(''),
         '#type' => 'textfield',
@@ -90,8 +100,10 @@ class AbsoluteStockLevelWidget extends StockLevelWidgetBase {
         '#size' => 10,
         '#maxlength' => 12,
       ];
+
+      // @ToDo Allow for setting a default value.
       if ($this->getSetting('transaction_note')) {
-        $elements['stock_transaction_note'] = [
+        $element['stock_transaction_note'] = [
           '#title' => $this->t('Transaction note'),
           '#description' => $this->t('Add a note to this transaction.'),
           '#type' => 'textfield',
@@ -101,7 +113,7 @@ class AbsoluteStockLevelWidget extends StockLevelWidgetBase {
       }
     }
 
-    return $elements;
+    return $element;
   }
 
   /**

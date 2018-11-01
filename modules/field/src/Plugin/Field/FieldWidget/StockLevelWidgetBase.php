@@ -8,7 +8,6 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Link;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -42,7 +41,12 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(
+    ContainerInterface $container,
+    array $configuration,
+    $plugin_id,
+    $plugin_definition
+  ) {
     return new static(
       $plugin_id,
       $plugin_definition,
@@ -57,8 +61,8 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
    */
   public static function defaultSettings() {
     return [
-      'transaction_note' => FALSE,
-    ] + parent::defaultSettings();
+        'transaction_note' => FALSE,
+      ] + parent::defaultSettings();
   }
 
   /**
@@ -102,6 +106,72 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
    */
   public function submitAll(array &$form, FormStateInterface $form_state) {
     $this->messenger->addMessage(t('Updated Stock.'));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function formElement(
+    FieldItemListInterface $items,
+    $delta,
+    array $element,
+    array &$form,
+    FormStateInterface $form_state
+  ) {
+    $field = $items->first();
+    $entity = $items->getEntity();
+
+    // @ToDo Use ::isApplicable instead.
+    if (!($entity instanceof PurchasableEntityInterface)) {
+      // No stock if this is not a purchasable entity.
+      return [];
+    }
+    if ($entity->isNew()) {
+      // We can not work with entities before they are fully created.
+      return [];
+    }
+    // If not a valid context.
+    if (!$this->stockServiceManager->isValidContext($entity)) {
+      return [];
+    }
+
+    // Get the available stock level.
+    $level = $field->available_stock;
+
+    if (empty($entity->id())) {
+      // We don't have a product ID as yet.
+      $element['#description'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'strong',
+        '#value' => $this->t('In order to set the stock level you need to save the product first!'),
+      ];
+      $element['#disabled'] = TRUE;
+    }
+    else {
+      $element['value']['stocked_entity'] = [
+        '#type' => 'value',
+        '#value' => $entity,
+      ];
+      $element['value']['adjustment'] = [
+        '#title' => $this->t('Stock level adjustment'),
+        '#description' => $this->t('A positive number will add stock, a negative number will remove stock. Current stock level: @stock_level', ['@stock_level' => $level]),
+        '#type' => 'number',
+        '#step' => 1,
+        '#default_value' => 0,
+        '#size' => 7,
+      ];
+      if ($this->getSetting('transaction_note')) {
+        $element['value']['stock_transaction_note'] = [
+          '#title' => $this->t('Transaction note'),
+          '#description' => $this->t('Add a note to this transaction.'),
+          '#type' => 'textfield',
+          '#default_value' => '',
+          '#size' => 50,
+        ];
+      }
+    }
+
+    return $element;
   }
 
 }

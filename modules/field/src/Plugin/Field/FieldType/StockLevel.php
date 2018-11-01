@@ -15,7 +15,7 @@ use Drupal\Core\TypedData\DataDefinition;
  *   label = @Translation("Stock level"),
  *   module = "commerce_stock_field",
  *   description = @Translation("Stock level"),
- *   default_widget = "commerce_stock_level_simple",
+ *   default_widget = "commerce_stock_level_simple_transaction",
  *   default_formatter = "commerce_stock_level_simple"
  * )
  */
@@ -35,8 +35,8 @@ class StockLevel extends FieldItemBase {
         'value' => [
           'type' => 'numeric',
           'size' => 'normal',
-          'precision' => 10,
-          'scale' => 2,
+          'precision' => 19,
+          'scale' => 4,
           'not null' => FALSE,
         ],
       ],
