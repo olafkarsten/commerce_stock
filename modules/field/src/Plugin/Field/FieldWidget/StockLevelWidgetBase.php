@@ -62,15 +62,8 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
   public static function defaultSettings() {
     return [
         'transaction_note' => FALSE,
+        'step' => '1',
       ] + parent::defaultSettings();
-  }
-
-  /**
-   * Submits the form.
-   */
-  public function submitForm($form, FormStateInterface $form_state) {
-    parent::submitForm($form, $form_state);
-    $this->messenger->addMessage(t('Updated Stock.'));
   }
 
   /**
@@ -78,6 +71,13 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
    */
   public function settingsSummary() {
     $summary = [];
+    if ($this->getSetting('step') == 1) {
+      $summary[] = $this->t('Decimal stock levels not allowed');
+    }
+    else {
+      $summary[] = $this->t('Decimal stock levels allowed');
+      $summary[] = $this->t('Step: @step', ['@step' => $this->getSetting('step')]);
+    }
     $summary[] = $this->t('Transaction note: @transaction_note', ['@transaction_note' => $this->getSetting('transaction_note') ? 'Yes' : 'No']);
     return $summary;
   }
@@ -86,26 +86,66 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
    * {@inheritdoc}
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
+    $field_name = $this->fieldDefinition->getName();
     $element = [];
     $element['transaction_note'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Provide note'),
+      '#title' => $this->t('Custom transaction note'),
       '#default_value' => $this->getSetting('transaction_note'),
-      '#description' => $this->t('Provide an input box for a transaction note.'),
+      '#description' => $this->t('Allow a custom transaction note.'),
+    ];
+    // Shameless borrowed from commerce quantity field.
+    $step = $this->getSetting('step');
+    $element['#element_validate'][] = [get_class($this), 'validateSettingsForm'];
+    $element['allow_decimal'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Allow decimal quantities'),
+      '#default_value' => $step != '1',
+    ];
+    $element['step'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Step'),
+      '#description' => $this->t('Only stock levels that are multiples of the selected step will be allowed. Maximum precision is 2 (0.01).'),
+      '#default_value' => $step != '1' ? $step : '0.1',
+      '#options' => [
+        '0.1' => '0.1',
+        '0.01' => '0.01',
+        '0.25' => '0.25',
+        '0.5' => '0.5',
+        '0.05' => '0.05',
+      ],
       '#states' => [
-        'invisible' => [
-          'select[name="fields[field_stock_level][settings_edit_form][settings][entry_system]"]' => ['value' => 'transactions'],
+        'visible' => [
+          ':input[name="fields[' . $field_name . '][settings_edit_form][settings][allow_decimal]"]' => ['checked' => TRUE],
         ],
       ],
+      '#required' => TRUE,
     ];
     return $element;
   }
 
   /**
+   * Validates the settings form.
+   *
+   * @param array $element
+   *   The settings form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  public static function validateSettingsForm(array $element, FormStateInterface $form_state) {
+    $value = $form_state->getValue($element['#parents']);
+    if (empty($value['allow_decimal'])) {
+      $value['step'] = '1';
+    }
+    unset($value['allow_decimal']);
+    $form_state->setValue($element['#parents'], $value);
+  }
+
+  /**
    * Submits the form.
    */
-  public function submitAll(array &$form, FormStateInterface $form_state) {
-    $this->messenger->addMessage(t('Updated Stock.'));
+  public function submitForm($form, FormStateInterface $form_state, $messenger) {
+    $messenger->addMessage(t('Updated Stock.'));
   }
 
   /**
@@ -126,6 +166,8 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
       // No stock if this is not a purchasable entity.
       return [];
     }
+    // @ToDo Consider how this may change
+    // @see https://www.drupal.org/project/commerce_stock/issues/2949569
     if ($entity->isNew()) {
       // We can not work with entities before they are fully created.
       return [];
@@ -156,7 +198,7 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
         '#title' => $this->t('Stock level adjustment'),
         '#description' => $this->t('A positive number will add stock, a negative number will remove stock. Current stock level: @stock_level', ['@stock_level' => $level]),
         '#type' => 'number',
-        '#step' => 1,
+        '#step' => $this->getSetting('step'),
         '#default_value' => 0,
         '#size' => 7,
       ];
