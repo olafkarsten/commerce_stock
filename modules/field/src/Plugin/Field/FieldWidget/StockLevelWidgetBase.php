@@ -96,7 +96,10 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
     ];
     // Shameless borrowed from commerce quantity field.
     $step = $this->getSetting('step');
-    $element['#element_validate'][] = [get_class($this), 'validateSettingsForm'];
+    $element['#element_validate'][] = [
+      get_class($this),
+      'validateSettingsForm',
+    ];
     $element['allow_decimal'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Allow decimal quantities'),
@@ -132,20 +135,16 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
    */
-  public static function validateSettingsForm(array $element, FormStateInterface $form_state) {
+  public static function validateSettingsForm(
+    array $element,
+    FormStateInterface $form_state
+  ) {
     $value = $form_state->getValue($element['#parents']);
     if (empty($value['allow_decimal'])) {
       $value['step'] = '1';
     }
     unset($value['allow_decimal']);
     $form_state->setValue($element['#parents'], $value);
-  }
-
-  /**
-   * Submits the form.
-   */
-  public function submitForm($form, FormStateInterface $form_state, $messenger) {
-    $messenger->addMessage(t('Updated Stock.'));
   }
 
   /**
@@ -190,11 +189,18 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
       $element['#disabled'] = TRUE;
     }
     else {
-      $element['value']['stocked_entity'] = [
+      $element['#type'] = 'fieldgroup';
+      $element['#attributes'] = ['class' => ['stock-level-field']];
+
+      $element['stocked_entity'] = [
         '#type' => 'value',
         '#value' => $entity,
       ];
-      $element['value']['adjustment'] = [
+      $element['absolute_stock_level'] = [
+        '#type' => 'value',
+        '#value' => FALSE,
+      ];
+      $element['adjustment'] = [
         '#title' => $this->t('Stock level adjustment'),
         '#description' => $this->t('A positive number will add stock, a negative number will remove stock. Current stock level: @stock_level', ['@stock_level' => $level]),
         '#type' => 'number',
@@ -203,12 +209,13 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
         '#size' => 7,
       ];
       if ($this->getSetting('transaction_note')) {
-        $element['value']['stock_transaction_note'] = [
+        $element['stock_transaction_note'] = [
           '#title' => $this->t('Transaction note'),
           '#description' => $this->t('Add a note to this transaction.'),
           '#type' => 'textfield',
           '#default_value' => '',
           '#size' => 50,
+          '#maxlength' => 255,
         ];
       }
     }

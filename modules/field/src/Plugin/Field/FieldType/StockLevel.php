@@ -3,9 +3,12 @@
 namespace Drupal\commerce_stock_field\Plugin\Field\FieldType;
 
 use Drupal\commerce_stock\StockTransactionsInterface;
+use Drupal\Core\Field\FieldException;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\TypedData\DataDefinition;
+use Drupal\Core\TypedData\DataDefinitionInterface;
+use Drupal\Core\TypedData\TypedDataInterface;
 
 /**
  * Plugin implementation of the 'commerce_stock_field' field type.
@@ -16,7 +19,8 @@ use Drupal\Core\TypedData\DataDefinition;
  *   module = "commerce_stock_field",
  *   description = @Translation("Stock level"),
  *   default_widget = "commerce_stock_level_simple_transaction",
- *   default_formatter = "commerce_stock_level_simple"
+ *   default_formatter = "commerce_stock_level_simple",
+ *   cardinality = 1,
  * )
  */
 class StockLevel extends FieldItemBase {
@@ -72,16 +76,20 @@ class StockLevel extends FieldItemBase {
 
   /**
    * This updates the stock based on parameters set by the stock widget.
+   *
+   * For computed fields we didn't find a chance to trigger the transaction,
+   * other than in ::setValue(). ::postSave() is not called for computed fields.
    */
   public function setValue($values, $notify = TRUE) {
-    static $called = [];
+    // To prevent multiple stock transactions, we need to track the processing.
+    static $processed = [];
 
     // Supports absolute values being passed in directly, i.e.
     // programmatically.
     if (!is_array($values)) {
       $value = filter_var($values, FILTER_VALIDATE_FLOAT);
       if ($value) {
-        $values = ['stock' => ['value' => $value]];
+        $values = ['adjustment' => $value];
       }
       else {
         return;
@@ -89,18 +97,38 @@ class StockLevel extends FieldItemBase {
     }
 
     if (!empty($this->getEntity())) {
+
       $entity = $this->getEntity();
       if (empty($entity->id())) {
         return;
       }
-      // @todo Figure out why sometimes this is called twice.
-      if (isset($called[$entity->getEntityTypeId() . $entity->id()])) {
+
+      // Entity allready processed.
+      if (isset($processed[$entity->getEntityTypeId() . $entity->id()])) {
         return;
       }
-      $called[$entity->getEntityTypeId() . $entity->id()] = TRUE;
+
+      $processed[$entity->getEntityTypeId() . $entity->id()] = TRUE;
+
       $transaction_qty = 0;
       $stockServiceManager = \Drupal::service('commerce_stock.service_manager');
 
+      // Supports values being passed in directly, i.e.
+      // programmatically.
+      if (!is_array($values)) {
+        $values = ['adjustment' => $values];
+      }
+
+      if ($values['absolute_stock_level']) {
+        $new_level = $values['adjustment'];
+        $level = $stockServiceManager->getStockLevel($entity);
+        $transaction_qty = $new_level - $level;
+      }
+      else {
+        $transaction_qty = $values['adjustment'];
+      }
+
+      /**
       if (isset($values['stock'])) {
         if (empty($values['stock']['entry_system'])) {
           $transaction_qty = (int) $values['stock']['value'];
@@ -120,6 +148,10 @@ class StockLevel extends FieldItemBase {
           }
         }
       }
+       */
+
+      // Some basic validation.
+      $transaction_qty = filter_var(float ($transaction_qty), FILTER_VALIDATE_FLOAT);
 
       if ($transaction_qty) {
         $transaction_type = ($transaction_qty > 0) ? StockTransactionsInterface::STOCK_IN : StockTransactionsInterface::STOCK_OUT;
@@ -127,20 +159,20 @@ class StockLevel extends FieldItemBase {
         /** @var \Drupal\commerce_stock\StockLocationInterface $location */
         $location = $stockServiceManager->getTransactionLocation($stockServiceManager->getContext($entity), $entity, $transaction_qty);
         if (empty($location)) {
-          // This shouldnever get called as we should always have a location.
-          return;
+          // If we have no location, something isn't properly configured.
+          throw new \RuntimeException('The StockServiceManager didn\'t return a location');
         }
-        $zone = '';
+        $zone = isset($values['zone']) ?: '';
         $unit_cost = NULL;
-        $currency_code = NULL;
-        // $unit_cost = $values['stock']['stocked_entity']->get('price')->getValue()[0]['number'];
-        // $currency_code = $values['stock']['stocked_entity']->get('price')->getValue()[0]['currency_code'];
-        // @ToDo Make this hardcoded note translatable or remove it at all.
-        $transaction_note = isset($values['stock']['stock_transaction_note']) ? $values['stock']['stock_transaction_note'] : 'stock level set or updated by field';
+        if(isset($values['unit_cost']['amount'])){
+           $unit_cost = filter_var(float ($values['unit_cost']['amount']), FILTER_VALIDATE_FLOAT);
+           $unit_cost ?: NULL;
+        };
+        $currency_code = isset($values['unit_cost']['currency_code']) ?: NULL;
+        $transaction_note = !empty($values['stock_transaction_note']) ? $values['stock_transaction_note'] : 'Transaction issued by stock level field.';
         $metadata = ['data' => ['message' => $transaction_note]];
-        $stockServiceManager->createTransaction($entity, $location->getId(), $zone, $transaction_qty, $unit_cost, $currency_code, $transaction_type, $metadata);
+        $stockServiceManager->createTransaction($entity, $location->getId(), $zone, $transaction_qty, (float) $unit_cost, $currency_code, $transaction_type, $metadata);
       }
     }
   }
-
 }
