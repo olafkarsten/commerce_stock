@@ -120,6 +120,10 @@ class StockLevel extends FieldItemBase {
       }
 
       if ($values['absolute_stock_level']) {
+        // Prevent deleting any stock in case of no adjustment value.
+        if(empty($values['adjustment']) && $values['adjustment'] !== "0") {
+          return;
+        }
         $new_level = $values['adjustment'];
         $level = $stockServiceManager->getStockLevel($entity);
         $transaction_qty = $new_level - $level;
@@ -151,7 +155,7 @@ class StockLevel extends FieldItemBase {
        */
 
       // Some basic validation.
-      $transaction_qty = filter_var(float ($transaction_qty), FILTER_VALIDATE_FLOAT);
+      $transaction_qty = filter_var((float) ($transaction_qty), FILTER_VALIDATE_FLOAT);
 
       if ($transaction_qty) {
         $transaction_type = ($transaction_qty > 0) ? StockTransactionsInterface::STOCK_IN : StockTransactionsInterface::STOCK_OUT;
@@ -165,7 +169,7 @@ class StockLevel extends FieldItemBase {
         $zone = isset($values['zone']) ?: '';
         $unit_cost = NULL;
         if(isset($values['unit_cost']['amount'])){
-           $unit_cost = filter_var(float ($values['unit_cost']['amount']), FILTER_VALIDATE_FLOAT);
+           $unit_cost = filter_var((float) ($values['unit_cost']['amount']), FILTER_VALIDATE_FLOAT);
            $unit_cost ?: NULL;
         };
         $currency_code = isset($values['unit_cost']['currency_code']) ?: NULL;
