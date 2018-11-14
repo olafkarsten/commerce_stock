@@ -93,6 +93,7 @@ class StockLevelTest extends ProductBrowserTestBase {
       'type' => 'default',
       'product_id' => $this->product->id(),
       'sku' => strtolower($this->randomMachineName()),
+      'field_stock_level_test' => null,
     ]);
   }
 

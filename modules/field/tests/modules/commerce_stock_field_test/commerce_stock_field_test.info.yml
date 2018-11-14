@@ -1,0 +1,9 @@
+name: 'Commerce Stock Field Test'
+type: module
+description: 'My Awesome Module'
+core: 8.x
+package: 'commerce_stock'
+dependencies:
+  - commerce_stock:commerce_stock
+  - commerce_stock:commerce_stock_field
+  - commerce_stock:commerce_stock_local
