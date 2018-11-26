@@ -109,4 +109,6 @@ abstract class StockBrowserTestBase extends CommerceBrowserTestBase {
     $this->product = $product;
   }
 
+
+
 }

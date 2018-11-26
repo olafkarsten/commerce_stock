@@ -4,7 +4,6 @@ namespace Drupal\Tests\commerce_stock\Kernel;
 
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\field\FieldStorageConfigInterface;
 
 /**
  * Provides methods to attach and configure a stock level field.
@@ -33,26 +32,23 @@ trait StockLevelFieldCreationTrait {
    *   A list of instance settings that will be added to the instance defaults.
    * @param array $widget_settings
    *   A list of widget settings that will be added to the widget defaults.
+   * @param array $widget_settings
+   *   A list of widget settings that will be added to the widget defaults.
    * @param string $formatter_id
    *   The id of the formatter.
    * @param array $formatter_settings
    *   A list of formatter settings that will be added to the formatter
    *   defaults.
-   *
-   * @return \Drupal\Core\Entity\EntityInterface|\Drupal\field\Entity\FieldStorageConfig
-   *   The field configuration.
-   *
-   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   protected function createStockLevelField(
     $entity_type,
     $bundle,
     $widget_id,
-    array $storage_settings = [],
-    array $field_settings = [],
-    array $widget_settings = [],
+    $storage_settings = [],
+    $field_settings = [],
+    $widget_settings = [],
     $formatter_id = 'commerce_stock_level_simple',
-    array $formatter_settings = []
+    $formatter_settings = []
   ) {
     $field_name = $this->getFieldname();
     $field_storage = FieldStorageConfig::loadByName($entity_type, $field_name);
@@ -74,7 +70,7 @@ trait StockLevelFieldCreationTrait {
   /**
    * Attaches a stock level field to an entity.
    *
-   * @param Drupal\field\Entity\FieldStorageConfigInterface $field_storage
+   * @param Drupal\field\Entity\FieldStorageConfig $field_storage
    *   The field storage.
    * @param string $bundle
    *   The bundle this field will be added to.
@@ -82,9 +78,9 @@ trait StockLevelFieldCreationTrait {
    *   A list of field settings that will be added to the defaults.
    */
   protected function attachStockLevelField(
-    FieldStorageConfigInterface $field_storage,
+    $field_storage,
     $bundle,
-    array $field_settings
+    $field_settings
   ) {
     FieldConfig::create([
       'field_storage' => $field_storage,
@@ -98,8 +94,8 @@ trait StockLevelFieldCreationTrait {
   /**
    * Set, update and configure the widget for the stock level field.
    *
-   * @param string $widget_id
-   *   The id of the widget.
+   * @param array $widget_settings
+   *   A list of widget settings that will be added to the widget defaults.
    * @param array $widget_settings
    *   A list of widget settings that will be added to the widget defaults.
    * @param string $entity_type
@@ -109,12 +105,13 @@ trait StockLevelFieldCreationTrait {
    */
   protected function configureFormDisplay(
     $widget_id,
-    array $widget_settings,
+    $widget_settings,
     $entity_type,
     $bundle
   ) {
 
     $entityTypeManager = \Drupal::entityTypeManager();
+    $entityTypeManager->clearCachedDefinitions();
 
     $form_display = $entityTypeManager
       ->getStorage('entity_form_display')
@@ -127,16 +124,15 @@ trait StockLevelFieldCreationTrait {
       ->save();
     $entityTypeManager->getStorage('entity_form_display')
       ->resetCache([$form_display->id()]);
-    $entityTypeManager->clearCachedDefinitions();
   }
 
   /**
    * Set, update and configure the widget for the stock level field.
    *
-   * @param string $formatter_id
-   *   The id of the formatter.
-   * @param array $formatter_settings
-   *   A list of formatter settings that will be added to the widget defaults.
+   * @param array $widget_settings
+   *   A list of widget settings that will be added to the widget defaults.
+   * @param array $widget_settings
+   *   A list of widget settings that will be added to the widget defaults.
    * @param string $entity_type
    *   The entity type.
    * @param string $bundle
@@ -144,7 +140,7 @@ trait StockLevelFieldCreationTrait {
    */
   protected function configureViewDisplay(
     $formatter_id,
-    array $formatter_settings,
+    $formatter_settings,
     $entity_type,
     $bundle
   ) {
@@ -165,7 +161,13 @@ trait StockLevelFieldCreationTrait {
     $product_variation_display->setComponent($this->fieldName, ['type' => 'commerce_stock_level_simple']);
     $product_variation_display->save();
 
-    $display = $entityTypeManager->getStorage('entity_view_display');
+    $product_variation_form_display = $entityTypeManager
+      ->getStorage('entity_form_display')
+      ->load($entity_type . '.' . $bundle . '.default');
+    $widget = $product_variation_form_display->getComponent('field_stock_level_test');
+    $widget2 = $product_variation_form_display->getRenderer($this->fieldName);
+
+    $display =  $entityTypeManager->getStorage('entity_view_display');
     $view_display = $display->load($entity_type . '.' . $bundle . '.default');
 
     if (!$view_display) {
@@ -177,10 +179,10 @@ trait StockLevelFieldCreationTrait {
       ]);
     }
 
-    $formatter = $view_display->getComponent($this->getFieldname());
-    $formatter['type'] = $formatter_id;
-    $formatter['settings'] = $formatter_settings;
-    $view_display->setComponent($this->getFieldname(), $formatter)
+    $widget = $view_display->getComponent($this->getFieldname());
+    $widget['type'] = $formatter_id;
+    $widget['settings'] = $formatter_settings;
+    $view_display->setComponent($this->getFieldname(), $widget)
       ->save();
     $entityTypeManager->getStorage('entity_form_display')
       ->resetCache([$view_display->id()]);
@@ -190,7 +192,7 @@ trait StockLevelFieldCreationTrait {
    * Return the field name.
    *
    * @return string
-   *   The name of the field.
+   *  The name of the field.
    */
   protected function getFieldname() {
     if (!empty($this->fieldName)) {

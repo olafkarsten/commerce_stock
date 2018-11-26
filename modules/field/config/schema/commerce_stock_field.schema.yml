@@ -1,3 +1,11 @@
+field.value.commerce_stock_level:
+  type: mapping
+  label: 'Default value'
+  mapping:
+    value:
+      type: numeric
+      label: 'Value'
+
 field.widget.settings.commerce_stock_level_simple:
   type: mapping
   label: 'Stock level field display format settings'

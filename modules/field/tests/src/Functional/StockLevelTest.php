@@ -7,23 +7,19 @@
 
 namespace Drupal\Tests\commerce_stock_field\Functional;
 
-use Drupal\field\Entity\FieldConfig;
-use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\Tests\commerce_product\Functional\ProductBrowserTestBase;
+use Drupal\commerce\Context;
+use Drupal\commerce_stock\StockTransactionsInterface;
+use Drupal\Tests\commerce_stock\Functional\StockBrowserTestBase;
+use Drupal\Tests\commerce_stock\Kernel\StockLevelFieldCreationTrait;
 
-class StockLevelTest extends ProductBrowserTestBase {
+class StockLevelTest extends StockBrowserTestBase {
+
+  use StockLevelFieldCreationTrait;
 
   /**
    * @var string
    */
   protected $fieldName;
-
-  /**
-   * The test product.
-   *
-   * @var \Drupal\commerce_product\Entity\ProductInterface
-   */
-  protected $product;
 
   /**
    * The test product variation.
@@ -38,8 +34,8 @@ class StockLevelTest extends ProductBrowserTestBase {
    * @var array
    */
   public static $modules = [
-    'commerce_stock',
     'commerce_stock_field',
+    'commerce_stock_local',
   ];
 
   /**
@@ -53,58 +49,67 @@ class StockLevelTest extends ProductBrowserTestBase {
   /**
    * Setting up the test.
    */
-  protected function setup(){
+  protected function setup() {
     parent::setUp();
+
+    $this->drupalLogin($this->adminUser);
+
+    $config = \Drupal::configFactory()
+      ->getEditable('commerce_stock.service_manager');
+    $config->set('default_service_id', 'local_stock');
+    $config->save();
 
     $entity_type = "commerce_product_variation";
     $bundle = 'default';
-    $entity_manager = \Drupal::entityManager();
-    $entity_manager->clearCachedDefinitions();
-    $this->fieldName = 'field_stock_level_test';
+    $this->fieldName = 'stock_level_test';
 
-    /** @var \Drupal\field\Entity\FieldStorageConfig $field_storage */
-    FieldStorageConfig::create([
-      'field_name' => $this->fieldName,
-      'type' => 'commerce_stock_level',
-      'entity_type' => $entity_type,
-    ])->save();
+    $widget_settings = [
+      'step' => 1,
+      'transaction_note' => FALSE,
+    ];
+    $this->createStockLevelField($entity_type, $bundle, 'commerce_stock_level_simple_transaction', [], [], $widget_settings);
 
-    FieldConfig::create([
-      'entity_type' => $entity_type,
-      'field_name' => $this->fieldName,
-      'bundle' => $bundle,
-      'label' => 'StockLevel',
-    ])->save();
-
-    entity_get_form_display('commerce_product_variation', 'default', 'default')
-      ->setComponent('field_stock_level_test', [
-        'type' => 'commerce_stock_level_simple_transaction',
-      ])
-      ->save();
-
-    $entity_manager->clearCachedDefinitions();
-    $definitions = $entity_manager->getFieldStorageDefinitions('commerce_product_variation', 'default');
-    $this->assertTrue(!empty($definitions[$this->fieldName]));
-
-    $this->product = $this->createEntity('commerce_product', [
-      'type' => 'default',
-    ]);
     $this->variation = $this->createEntity('commerce_product_variation', [
       'type' => 'default',
-      'product_id' => $this->product->id(),
       'sku' => strtolower($this->randomMachineName()),
-      'field_stock_level_test' => null,
+      'price' => [
+        'number' => 999,
+        'currency_code' => 'USD',
+      ],
     ]);
+    $this->product = $this->createEntity('commerce_product', [
+      'type' => 'default',
+      'title' => $this->randomMachineName(),
+      'stores' => [$this->store],
+      'variations' => [$this->variation],
+    ]);
+
+    self::assertTrue($this->variation->hasField($this->fieldName));
+
+    $stockServiceConfiguration = $this->stockServiceManager->getService($this->variation)
+      ->getConfiguration();
+    $context = new Context($this->adminUser, $this->store);
+    $this->locations = $stockServiceConfiguration->getAvailabilityLocations($context, $this->variation);
+    $this->stockServiceManager->createTransaction($this->variation, $this->locations[1]->getId(), '', 10, 10.10, 'USD', StockTransactionsInterface::STOCK_IN, []);
+
   }
 
   public function testEditProductVariationForm() {
-    $this->drupalGet($this->variation->toUrl('edit-form'));
 
+    //$this->drupalGet('product/' . $this->product->id());
+    //$this->assertSession()->pageTextContains('StockLevelTest');
+    //$this->assertSession()->elementContains('css', '.field--name-field-stock-level-test p', '10');
+
+    $uri = $this->variation->toUrl('edit-form');
     $this->saveHtmlOutput();
-
+    $test1 = $this->variations[0]->isActive();
+    $test2 = $this->variations[1]->isActive();
+    $test3 = $this->variations[2]->isActive();
+    $uri = $this->variations[0]->toUrl('edit-form');
+    $this->drupalGet($this->variations[0]->toUrl('edit-form'));
+    $this->saveHtmlOutput();
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->fieldExists('sku[0][value]');
-
     $this->assertSession()->buttonExists('Save');
 
     // Ensure the stock part of the form is healty.
@@ -113,9 +118,24 @@ class StockLevelTest extends ProductBrowserTestBase {
     $this->assertSession()
       ->checkboxNotChecked('commerce_stock_always_in_stock[value]');
 
-    $this->assertSession()->pageTextContains('Always in stock?');
-    $this->assertSession()->fieldExists($this->fieldName .'[0][adjustment]');
+    $elements = $this->xpath('//input[starts-with(@name,"' . $this->fieldName . '")]');
 
+    $this->assertSession()->pageTextContains('Always in stock?');
+    $this->assertSession()->fieldExists($this->fieldName . '[0][adjustment]');
+
+  }
+
+  /**
+   * Test the default formatter appears on product add to cart forms.
+   *
+   * @throws \Behat\Mink\Exception\ElementHtmlException
+   * @throws \Behat\Mink\Exception\ResponseTextException
+   */
+  public function atestDefaultFormatter() {
+
+    $this->drupalGet('product/' . $this->product->id());
+    $this->assertSession()->pageTextContains('StockLevelTest');
+    $this->assertSession()->elementContains('css', '.field--name-field-stock-level-test p', '10');
   }
 
 }
