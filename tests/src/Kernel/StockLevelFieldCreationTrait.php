@@ -111,7 +111,6 @@ trait StockLevelFieldCreationTrait {
   ) {
 
     $entityTypeManager = \Drupal::entityTypeManager();
-    $entityTypeManager->clearCachedDefinitions();
 
     $form_display = $entityTypeManager
       ->getStorage('entity_form_display')
@@ -124,6 +123,7 @@ trait StockLevelFieldCreationTrait {
       ->save();
     $entityTypeManager->getStorage('entity_form_display')
       ->resetCache([$form_display->id()]);
+    $entityTypeManager->clearCachedDefinitions();
   }
 
   /**
@@ -161,12 +161,6 @@ trait StockLevelFieldCreationTrait {
     $product_variation_display->setComponent($this->fieldName, ['type' => 'commerce_stock_level_simple']);
     $product_variation_display->save();
 
-    $product_variation_form_display = $entityTypeManager
-      ->getStorage('entity_form_display')
-      ->load($entity_type . '.' . $bundle . '.default');
-    $widget = $product_variation_form_display->getComponent('field_stock_level_test');
-    $widget2 = $product_variation_form_display->getRenderer($this->fieldName);
-
     $display =  $entityTypeManager->getStorage('entity_view_display');
     $view_display = $display->load($entity_type . '.' . $bundle . '.default');
 
@@ -179,10 +173,10 @@ trait StockLevelFieldCreationTrait {
       ]);
     }
 
-    $widget = $view_display->getComponent($this->getFieldname());
-    $widget['type'] = $formatter_id;
-    $widget['settings'] = $formatter_settings;
-    $view_display->setComponent($this->getFieldname(), $widget)
+    $formatter = $view_display->getComponent($this->getFieldname());
+    $formatter['type'] = $formatter_id;
+    $formatter['settings'] = $formatter_settings;
+    $view_display->setComponent($this->getFieldname(), $formatter)
       ->save();
     $entityTypeManager->getStorage('entity_form_display')
       ->resetCache([$view_display->id()]);

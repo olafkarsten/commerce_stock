@@ -72,7 +72,6 @@ class StockLevel extends FieldItemBase {
    */
   public function isEmpty() {
     $value = $this->get('value')->getValue();
-    return false;
     return $value === NULL;
   }
 
