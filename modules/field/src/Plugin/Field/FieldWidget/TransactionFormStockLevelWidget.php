@@ -9,7 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 
 /**
- * Plugin implementation of the 'absolute_commerce_stock_level' widget.
+ * Plugin implementation of the 'commerce_stock_level_transaction_form_link' widget.
  *
  * @FieldWidget(
  *   id = "commerce_stock_level_transaction_form_link",
@@ -22,6 +22,15 @@ use Drupal\Core\Link;
  * )
  */
 class TransactionFormStockLevelWidget extends WidgetBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary() {
+    $summary = [];
+    $summary[] = $this->t('Provides a link to stock transaction form.');
+    return $summary;
+  }
 
   /**
    * {@inheritdoc}

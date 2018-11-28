@@ -11,7 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
  * @FieldWidget(
  *   id = "commerce_stock_level_absolute",
  *   module = "commerce_stock_field",
- *   label = @Translation("Absolute stock level widget"),
+ *   label = @Translation("Absolute stock level"),
  *   description = @Translation("Sets the absolute stock level. You will loose
  *   all the glamour of transaction based stock handling. We recommend using
  *   the simple stock transaction widget instead. Learn more in the
@@ -35,7 +35,7 @@ class AbsoluteStockLevelWidget extends StockLevelWidgetBase {
     $element = parent::formElement($items, $delta, $element, $form, $form_state);
     $field = $items->first();
     $level = $field->available_stock;
-    $element['adjustment'] = array_merge(
+    $element['stock_level'] = array_merge(
       $element['adjustment'],
       [
         '#title' => $this->t('Absolute stock level settings'),
@@ -46,11 +46,28 @@ class AbsoluteStockLevelWidget extends StockLevelWidgetBase {
         '#default_value' => NULL,
 
       ]);
-    $element['absolute_stock_level'] = [
-      '#type' => 'value',
-      '#value' => TRUE,
-    ];
+    unset($element['adjustment']);
     return $element;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
+    if(empty($values[0]['stock_level']) && $values[0]['stock_level'] !== "0") {
+      $values[0]['adjustment'] = null;
+    }
+    $new_level = $values[0]['stock_level'];
+    $current_level = $this->stockServiceManager->getStockLevel($values[0]['stocked_entity']);
+    $values[0]['adjustment'] = $new_level - $current_level;
+    return $values;
+  }
+
+  /**
+   * @inheritdoc
+   */
+  protected function getHelpText() {
+    return 'Set the absolute stock level. We don\'t recommend using this widget. Read the docs to learn why.';
   }
 
 }

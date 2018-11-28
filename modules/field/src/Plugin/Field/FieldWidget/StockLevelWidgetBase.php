@@ -61,7 +61,8 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
    */
   public static function defaultSettings() {
     return [
-        'transaction_note' => FALSE,
+        'custom_transaction_note' => FALSE,
+        'default_transaction_note' => t('Transaction issued by stock level field.'),
         'step' => '1',
       ] + parent::defaultSettings();
   }
@@ -78,7 +79,9 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
       $summary[] = $this->t('Decimal stock levels allowed');
       $summary[] = $this->t('Step: @step', ['@step' => $this->getSetting('step')]);
     }
-    $summary[] = $this->t('Transaction note: @transaction_note', ['@transaction_note' => $this->getSetting('transaction_note') ? 'Yes' : 'No']);
+
+    $summary[] = $this->t('Default transaction note: @transaction_note', ['@transaction_note' => $this->getSetting('default_transaction_note')]);
+    $summary[] = $this->t('Custom transaction note @allowed allowed.', ['@allowed' => $this->getSetting('custom_transaction_note') ? '' : 'not']);
     return $summary;
   }
 
@@ -88,11 +91,26 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
   public function settingsForm(array $form, FormStateInterface $form_state) {
     $field_name = $this->fieldDefinition->getName();
     $element = [];
-    $element['transaction_note'] = [
+    if ($this->hasHelpText()) {
+      $element = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t($this->getHelpText()),
+      ];
+    }
+
+    $element['default_transaction_note'] = [
+      '#title' => $this->t('Default transaction note'),
+      '#description' => $this->t('Use this as default transaction note.'),
+      '#type' => 'textfield',
+      '#default_value' => $this->getSetting('default_transaction_note'),
+      '#size' => 50,
+      '#maxlength' => 255,
+    ];
+    $element['custom_transaction_note'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Custom transaction note'),
-      '#default_value' => $this->getSetting('transaction_note'),
-      '#description' => $this->t('Allow a custom transaction note.'),
+      '#title' => $this->t('Allow custom note per transaction.'),
+      '#default_value' => $this->getSetting('custom_transaction_note'),
     ];
     // Shameless borrowed from commerce quantity field.
     $step = $this->getSetting('step');
@@ -165,6 +183,14 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
       // No stock if this is not a purchasable entity.
       return [];
     }
+    // @ToDo Use ::isApplicable instead.
+    /** @var \Drupal\commerce_stock\StockServiceInterface $stock_service */
+    $stock_service = $this->stockServiceManager->getService($entity);
+    // @todo - service should be able can determine if it needs an interface.
+    if ($stock_service->getId() === 'always_in_stock') {
+      // Return an empty array if service is not supported.
+      return [];
+    }
     // @ToDo Consider how this may change
     // @see https://www.drupal.org/project/commerce_stock/issues/2949569
     if ($entity->isNew()) {
@@ -180,10 +206,10 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
     $level = $field->available_stock;
 
     if (empty($entity->id())) {
-      // We don't have a product ID as yet.
+      // We don't have a product ID yet.
       $element['#description'] = [
         '#type' => 'html_tag',
-        '#tag' => 'strong',
+        '#tag' => 'div',
         '#value' => $this->t('In order to set the stock level you need to save the product first!'),
       ];
       $element['#disabled'] = TRUE;
@@ -196,10 +222,6 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
         '#type' => 'value',
         '#value' => $entity,
       ];
-      $element['absolute_stock_level'] = [
-        '#type' => 'value',
-        '#value' => FALSE,
-      ];
       $element['adjustment'] = [
         '#title' => $this->t('Stock level adjustment'),
         '#description' => $this->t('A positive number will add stock, a negative number will remove stock. Current stock level: @stock_level', ['@stock_level' => $level]),
@@ -208,19 +230,38 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
         '#default_value' => 0,
         '#size' => 7,
       ];
-      if ($this->getSetting('transaction_note')) {
-        $element['stock_transaction_note'] = [
-          '#title' => $this->t('Transaction note'),
-          '#description' => $this->t('Add a note to this transaction.'),
-          '#type' => 'textfield',
-          '#default_value' => '',
-          '#size' => 50,
-          '#maxlength' => 255,
-        ];
-      }
+      $custom_note_allowed = $this->getSetting('custom_transaction_note');
+      $element['stock_transaction_note'] = [
+        '#title' => $this->t('Transaction note'),
+        '#description' => $custom_note_allowed ? $this->t('Add a note to this transaction.') : $this->t('Default note for transactions. Configurable in the field widget settings.'),
+        '#type' => 'textfield',
+        '#default_value' => $this->getSetting('default_transaction_note'),
+        '#size' => 50,
+        '#maxlength' => 255,
+        '#disabled' => !$custom_note_allowed,
+      ];
+
     }
 
     return $element;
+  }
+
+  /**
+   * Provides the help text to explain the widgets use case. Used in settings
+   * form.
+   *
+   * @return string|null
+   *   The help text or NULL.
+   */
+  abstract protected function getHelpText();
+
+  /**
+   * Whether a help text is available.
+   *
+   * @return bool
+   */
+  private function hasHelpText() {
+    return !empty($this->getHelpText());
   }
 
 }

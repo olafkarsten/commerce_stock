@@ -27,9 +27,12 @@ field.widget.settings.commerce_stock_level_absolute:
     step:
       type: string
       label: 'Step'
-    transaction_note:
+    custom_transaction_note:
       type: boolean
       label: 'Whether a transaction note should be captured by the widget'
+    default_transaction_note:
+      type: text
+      label: 'The default transaction note'
 
 field.widget.settings.commerce_stock_level_simple_transaction:
   type: mapping
@@ -38,6 +41,9 @@ field.widget.settings.commerce_stock_level_simple_transaction:
     step:
       type: string
       label: 'Step'
-    transaction_note:
+    custom_transaction_note:
       type: boolean
       label: 'Whether a transaction note should be captured by the widget'
+    default_transaction_note:
+      type: text
+      label: 'The default transaction note'
