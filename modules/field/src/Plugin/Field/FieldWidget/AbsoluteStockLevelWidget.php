@@ -56,6 +56,7 @@ class AbsoluteStockLevelWidget extends StockLevelWidgetBase {
   public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
     if (empty($values[0]['stock_level']) && $values[0]['stock_level'] !== "0") {
       $values[0]['adjustment'] = NULL;
+      return $values;
     }
     $new_level = $values[0]['stock_level'];
     $current_level = $this->stockServiceManager->getStockLevel($values[0]['stocked_entity']);

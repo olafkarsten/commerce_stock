@@ -159,6 +159,16 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
     $transaction2 = $this->getLastEntityTransaction($this->variation->id());
     $this->assertEquals($transaction->id, $transaction2->id);
 
+    // Empty absolute stock_level shoudn't trigger any transaction.
+    $stock_level = '';
+    $edit = [
+      $this->fieldName . '[0][stock_level]' => $stock_level,
+    ];
+    $this->submitForm($edit, 'Save');
+    $this->assertSession()->statusCodeEquals(200);
+    $transaction3 = $this->getLastEntityTransaction($this->variation->id());
+    $this->assertEquals($transaction->id, $transaction3->id);
+
     $widget_settings = [
       'custom_transaction_note' => TRUE,
       'default_transaction_note' => $default_note,
@@ -192,6 +202,16 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
     $this->assertEquals(-10, $transaction->qty);
     $this->assertEquals($this->adminUser->id(), $transaction->related_uid);
     $this->assertTrue('CustumNote', $data['message']);
+
+    // Testing that zero value, results in a transaction.
+    $stock_level = 0;
+    $edit = [
+      $this->fieldName . '[0][stock_level]' => $stock_level,
+    ];
+    $this->submitForm($edit, 'Save');
+    $this->assertSession()->statusCodeEquals(200);
+    $transaction = $this->getLastEntityTransaction($this->variation->id());
+    $this->assertEquals(-5, $transaction->qty);
   }
 
   /**
