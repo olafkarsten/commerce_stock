@@ -61,10 +61,10 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
    */
   public static function defaultSettings() {
     return [
-        'custom_transaction_note' => FALSE,
-        'default_transaction_note' => t('Transaction issued by stock level field.'),
-        'step' => '1',
-      ] + parent::defaultSettings();
+      'custom_transaction_note' => FALSE,
+      'default_transaction_note' => t('Transaction issued by stock level field.'),
+      'step' => '1',
+    ] + parent::defaultSettings();
   }
 
   /**
@@ -95,7 +95,7 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
       $element = [
         '#type' => 'html_tag',
         '#tag' => 'div',
-        '#value' => $this->t($this->getHelpText()),
+        '#value' => $this->getHelpText(),
       ];
     }
 
@@ -250,7 +250,7 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
    * Provides the help text to explain the widgets use case. Used in settings
    * form.
    *
-   * @return string|null
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup|null
    *   The help text or NULL.
    */
   abstract protected function getHelpText();
@@ -259,6 +259,7 @@ abstract class StockLevelWidgetBase extends WidgetBase implements ContainerFacto
    * Whether a help text is available.
    *
    * @return bool
+   *   TRUE if a help text is availabel, FALSE otherwise.
    */
   private function hasHelpText() {
     return !empty($this->getHelpText());

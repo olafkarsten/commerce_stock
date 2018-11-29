@@ -21,6 +21,7 @@ class SimpleTransactionStockLevelWidget extends StockLevelWidgetBase {
    * @inheritdoc
    */
   protected function getHelpText() {
-    return 'Simple stock adjustments right on the products edit form. We recommend using this widget. Learn in the docs why.';
+    return $this->t('Simple stock adjustments right on the products edit form. We recommend using this widget. Learn in the docs why.');
   }
+
 }

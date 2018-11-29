@@ -32,23 +32,26 @@ trait StockLevelFieldCreationTrait {
    *   A list of instance settings that will be added to the instance defaults.
    * @param array $widget_settings
    *   A list of widget settings that will be added to the widget defaults.
-   * @param array $widget_settings
-   *   A list of widget settings that will be added to the widget defaults.
    * @param string $formatter_id
    *   The id of the formatter.
    * @param array $formatter_settings
    *   A list of formatter settings that will be added to the formatter
    *   defaults.
+   *
+   * @return \Drupal\Core\Entity\EntityInterface|\Drupal\field\Entity\FieldStorageConfig
+   *   The field configuration.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   protected function createStockLevelField(
     $entity_type,
     $bundle,
     $widget_id,
-    $storage_settings = [],
-    $field_settings = [],
-    $widget_settings = [],
+    array $storage_settings = [],
+    array $field_settings = [],
+    array $widget_settings = [],
     $formatter_id = 'commerce_stock_level_simple',
-    $formatter_settings = []
+    array $formatter_settings = []
   ) {
     $field_name = $this->getFieldname();
     $field_storage = FieldStorageConfig::loadByName($entity_type, $field_name);
@@ -70,7 +73,7 @@ trait StockLevelFieldCreationTrait {
   /**
    * Attaches a stock level field to an entity.
    *
-   * @param Drupal\field\Entity\FieldStorageConfig $field_storage
+   * @param Drupal\field\Entity\FieldStorageConfigInterface $field_storage
    *   The field storage.
    * @param string $bundle
    *   The bundle this field will be added to.
@@ -78,9 +81,9 @@ trait StockLevelFieldCreationTrait {
    *   A list of field settings that will be added to the defaults.
    */
   protected function attachStockLevelField(
-    $field_storage,
+    FieldStorageConfigInterface $field_storage,
     $bundle,
-    $field_settings
+    array $field_settings
   ) {
     FieldConfig::create([
       'field_storage' => $field_storage,
@@ -94,8 +97,8 @@ trait StockLevelFieldCreationTrait {
   /**
    * Set, update and configure the widget for the stock level field.
    *
-   * @param array $widget_settings
-   *   A list of widget settings that will be added to the widget defaults.
+   * @param string $widget_id
+   *   The id of the widget.
    * @param array $widget_settings
    *   A list of widget settings that will be added to the widget defaults.
    * @param string $entity_type
@@ -105,7 +108,7 @@ trait StockLevelFieldCreationTrait {
    */
   protected function configureFormDisplay(
     $widget_id,
-    $widget_settings,
+    array $widget_settings,
     $entity_type,
     $bundle
   ) {
@@ -129,10 +132,10 @@ trait StockLevelFieldCreationTrait {
   /**
    * Set, update and configure the widget for the stock level field.
    *
-   * @param array $widget_settings
-   *   A list of widget settings that will be added to the widget defaults.
-   * @param array $widget_settings
-   *   A list of widget settings that will be added to the widget defaults.
+   * @param string $formatter_id
+   *   The id of the formatter.
+   * @param array $formatter_settings
+   *   A list of formatter settings that will be added to the widget defaults.
    * @param string $entity_type
    *   The entity type.
    * @param string $bundle
@@ -140,7 +143,7 @@ trait StockLevelFieldCreationTrait {
    */
   protected function configureViewDisplay(
     $formatter_id,
-    $formatter_settings,
+    array $formatter_settings,
     $entity_type,
     $bundle
   ) {
@@ -161,7 +164,7 @@ trait StockLevelFieldCreationTrait {
     $product_variation_display->setComponent($this->fieldName, ['type' => 'commerce_stock_level_simple']);
     $product_variation_display->save();
 
-    $display =  $entityTypeManager->getStorage('entity_view_display');
+    $display = $entityTypeManager->getStorage('entity_view_display');
     $view_display = $display->load($entity_type . '.' . $bundle . '.default');
 
     if (!$view_display) {
@@ -186,7 +189,7 @@ trait StockLevelFieldCreationTrait {
    * Return the field name.
    *
    * @return string
-   *  The name of the field.
+   *   The name of the field.
    */
   protected function getFieldname() {
     if (!empty($this->fieldName)) {

@@ -40,8 +40,7 @@ abstract class StockLevelFieldTestBase extends StockBrowserTestBase {
    * {@inheritdoc}
    */
   protected function getAdministratorPermissions() {
-    return array_merge([
-    ], parent::getAdministratorPermissions());
+    return array_merge([], parent::getAdministratorPermissions());
   }
 
   /**
@@ -78,7 +77,5 @@ abstract class StockLevelFieldTestBase extends StockBrowserTestBase {
     $this->stockServiceManager->createTransaction($this->variation, $this->locations[1]->getId(), '', 10, 10.10, 'USD', StockTransactionsInterface::STOCK_IN, []);
     self::assertTrue($this->stockServiceManager->getStockLevel($this->variation) == 10);
   }
-
-
 
 }

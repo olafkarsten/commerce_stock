@@ -16,6 +16,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Plugin implementation of the 'commerce_stock_level' widget.
  *
  * Deprecated: We have now a dedicated widget per use case.
+ *
  * @see https://www.drupal.org/project/commerce_stock/issues/2931754
  *
  * @FieldWidget(
@@ -69,10 +70,10 @@ class SimpleStockLevelWidget extends WidgetBase implements ContainerFactoryPlugi
    */
   public static function defaultSettings() {
     return [
-        'transaction_note' => FALSE,
-        'entry_system' => 'simple',
-        'context_fallback' => FALSE,
-      ] + parent::defaultSettings();
+      'transaction_note' => FALSE,
+      'entry_system' => 'simple',
+      'context_fallback' => FALSE,
+    ] + parent::defaultSettings();
   }
 
   /**

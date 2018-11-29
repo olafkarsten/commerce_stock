@@ -54,8 +54,8 @@ class AbsoluteStockLevelWidget extends StockLevelWidgetBase {
    * {@inheritdoc}
    */
   public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
-    if(empty($values[0]['stock_level']) && $values[0]['stock_level'] !== "0") {
-      $values[0]['adjustment'] = null;
+    if (empty($values[0]['stock_level']) && $values[0]['stock_level'] !== "0") {
+      $values[0]['adjustment'] = NULL;
     }
     $new_level = $values[0]['stock_level'];
     $current_level = $this->stockServiceManager->getStockLevel($values[0]['stocked_entity']);
@@ -67,7 +67,7 @@ class AbsoluteStockLevelWidget extends StockLevelWidgetBase {
    * @inheritdoc
    */
   protected function getHelpText() {
-    return 'Set the absolute stock level. We don\'t recommend using this widget. Read the docs to learn why.';
+    return $this->t("Set the absolute stock level. We don't recommend using this widget. Read the docs to learn why.");
   }
 
 }
