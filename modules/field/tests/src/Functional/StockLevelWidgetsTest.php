@@ -2,6 +2,10 @@
 
 namespace Drupal\Tests\commerce_stock_field\Functional;
 
+use Drupal\Tests\commerce_stock\Kernel\StockLevelFieldCreationTrait;
+use Drupal\Tests\commerce_stock\Kernel\StockTransactionQueryTrait;
+use Behat\Mink\Exception\ExpectationException;
+
 /**
  * Provides tests for the stock level widget.
  *
@@ -9,22 +13,18 @@ namespace Drupal\Tests\commerce_stock_field\Functional;
  */
 class StockLevelWidgetsTest extends StockLevelFieldTestBase {
 
+  use StockTransactionQueryTrait;
+  use StockLevelFieldCreationTrait;
+
   /**
    * Tests the commerce_stock_level_simple widget.
    *
    * @throws \Drupal\Core\Entity\EntityMalformedException
    */
-  public function testWidgetsOnEditProductVariationForm() {
+  public function testSimpleTransactionStockLevelWidget() {
 
     $entity_type = "commerce_product_variation";
     $bundle = 'default';
-    $widget_type = 'commerce_stock_level_simple';
-    $widget_settings = [
-      'entry_system' => 'basic',
-      'transaction_note' => FALSE,
-      'context_fallback' => FALSE,
-    ];
-    $this->configureFormDisplay($widget_type, $widget_settings, $entity_type, $bundle);
     $this->drupalGet($this->variation->toUrl('edit-form'));
     $this->assertSession()->statusCodeEquals(200);
 
@@ -33,30 +33,40 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
       ->fieldExists('commerce_stock_always_in_stock[value]');
     $this->assertSession()
       ->checkboxNotChecked('commerce_stock_always_in_stock[value]');
-    $this->assertSession()->fieldExists($this->fieldName . '[0][stock][adjustment]');
-    $this->assertSession()->pageTextContains('Stock level');
 
+    // Check the defaults.
+    $this->assertSession()->fieldExists($this->fieldName . '[0][adjustment]');
+    $this->assertSession()->fieldExists($this->fieldName . '[0][stock_transaction_note]');
+    $this->assertSession()->fieldDisabled($this->fieldName . '[0][stock_transaction_note]');
+
+    $widget_id = "commerce_stock_level_simple_transaction";
+    $default_note = $this->randomString(200);
     $widget_settings = [
-      'entry_system' => 'simple',
-      'transaction_note' => FALSE,
-      'context_fallback' => FALSE,
+      'custom_transaction_note' => FALSE,
+      'default_transaction_note' => $default_note ,
+      'step' => '1',
     ];
-    $this->configureFormDisplay($widget_type, $widget_settings, $entity_type, $bundle);
+    $this->configureFormDisplay($widget_id, $widget_settings, $entity_type, $bundle);
     $this->drupalGet($this->variation->toUrl('edit-form'));
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->fieldExists($this->fieldName . '[0][stock][value]');
-    $this->assertSession()->pageTextContains('Total stock level available for this item.');
+    $this->assertSession()->fieldExists($this->fieldName . '[0][adjustment]');
+    $this->assertSession()->fieldExists($this->fieldName . '[0][stock_transaction_note]');
+    $this->assertSession()->fieldDisabled($this->fieldName . '[0][stock_transaction_note]');
+    $this->assertSession()->fieldValueEquals($this->fieldName . '[0][stock_transaction_note]', $default_note);
 
     $widget_settings = [
-      'entry_system' => 'transactions',
-      'transaction_note' => FALSE,
-      'context_fallback' => FALSE,
+      'custom_transaction_note' => TRUE,
+      'default_transaction_note' => $default_note ,
+      'step' => '1',
     ];
-    $this->configureFormDisplay($widget_type, $widget_settings, $entity_type, $bundle);
+    $this->configureFormDisplay($widget_id, $widget_settings, $entity_type, $bundle);
     $this->drupalGet($this->variation->toUrl('edit-form'));
     $this->assertSession()->statusCodeEquals(200);
-    $this->saveHtmlOutput();
-    $this->assertSession()->linkExists('New transaction');
+    $this->assertSession()->fieldExists($this->fieldName . '[0][adjustment]');
+    $this->assertSession()->fieldExists($this->fieldName . '[0][stock_transaction_note]');
+    self::setExpectedException(ExpectationException::class);
+    $this->assertSession()->fieldDisabled($this->fieldName . '[0][stock_transaction_note]');
+    $this->assertSession()->fieldValueEquals($this->fieldName . '[0][stock_transaction_note]', $default_note);
   }
 
 }

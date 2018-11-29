@@ -7,7 +7,7 @@ use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 /**
  * Base class for Commerce Stock kernel tests.
  */
-class CommerceStockKernelTestBase extends CommerceKernelTestBase {
+abstract class CommerceStockKernelTestBase extends CommerceKernelTestBase {
 
   /**
    * Modules to enable.
@@ -22,5 +22,4 @@ class CommerceStockKernelTestBase extends CommerceKernelTestBase {
     'commerce_stock_local',
     'commerce_stock_field',
   ];
-
 }

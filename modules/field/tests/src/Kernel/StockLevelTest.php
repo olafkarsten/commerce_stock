@@ -9,6 +9,7 @@ use Drupal\commerce_stock\StockTransactionsInterface;
 use Drupal\commerce_stock_local\Entity\StockLocation;
 use Drupal\Tests\commerce_stock\Kernel\CommerceStockKernelTestBase;
 use Drupal\Tests\commerce_stock\Kernel\StockLevelFieldCreationTrait;
+use Drupal\Tests\commerce_stock\Kernel\StockTransactionQueryTrait;
 
 /**
  * Ensure the stock level field works.
@@ -20,6 +21,7 @@ use Drupal\Tests\commerce_stock\Kernel\StockLevelFieldCreationTrait;
 class StockLevelTest extends CommerceStockKernelTestBase {
 
   use StockLevelFieldCreationTrait;
+  use StockTransactionQueryTrait;
 
   /**
    * Modules to enable.
@@ -192,7 +194,7 @@ class StockLevelTest extends CommerceStockKernelTestBase {
     ];
 
     $this->variation->set('test_stock_level', $mock_widget_values);
-    $transaction = $this->getLastTransaction();
+    $transaction = $this->getLastEntityTransaction($this->variation->id());
     $data = unserialize($transaction->data);
     $this->assertEquals($mock_widget_values['zone'], $transaction->location_zone);
     $this->assertEquals($mock_widget_values['adjustment'], $transaction->qty);
@@ -202,22 +204,6 @@ class StockLevelTest extends CommerceStockKernelTestBase {
     $this->assertTrue($mock_widget_values['stock_transaction_note'], $data['message']);
   }
 
-  /**
-   * Return the last transaction.
-   *
-   * @return obj
-   *   The transaction.
-   */
-  protected function getLastTransaction() {
-    $connection = \Drupal::database();
-    $query = $connection->select('commerce_stock_transaction', 'txn')
-      ->fields('txn')
-      ->condition('entity_id', $this->variation->id())
-      ->orderBy('id', 'DESC')
-      ->range(0, 1);
-    return $query
-      ->execute()
-      ->fetchObject();
-  }
+
 
 }
