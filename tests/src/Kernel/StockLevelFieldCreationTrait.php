@@ -73,7 +73,7 @@ trait StockLevelFieldCreationTrait {
   /**
    * Attaches a stock level field to an entity.
    *
-   * @param Drupal\field\Entity\FieldStorageConfigInterface $field_storage
+   * @param Drupal\field\Entity\FieldStorageConfig $field_storage
    *   The field storage.
    * @param string $bundle
    *   The bundle this field will be added to.
@@ -81,7 +81,7 @@ trait StockLevelFieldCreationTrait {
    *   A list of field settings that will be added to the defaults.
    */
   protected function attachStockLevelField(
-    FieldStorageConfigInterface $field_storage,
+    FieldStorageConfig $field_storage,
     $bundle,
     array $field_settings
   ) {
