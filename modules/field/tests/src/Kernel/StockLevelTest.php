@@ -204,6 +204,4 @@ class StockLevelTest extends CommerceStockKernelTestBase {
     $this->assertTrue($mock_widget_values['stock_transaction_note'], $data['message']);
   }
 
-
-
 }

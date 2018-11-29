@@ -15,13 +15,13 @@ namespace Drupal\commerce_stock_field\Plugin\Field\FieldWidget;
  *   }
  * )
  */
-class SimpleTransactionStockLevelWidget extends StockLevelWidgetBase {
+class SimpleStockTransactionWidget extends StockLevelWidgetBase {
 
   /**
    * @inheritdoc
    */
   protected function getHelpText() {
-    return $this->t('Simple stock adjustments right on the products edit form. We recommend using this widget. Learn in the docs why.');
+    return $this->t('Simple stock adjustments right on the product edit form. We recommend using this widget. Learn in the docs why.');
   }
 
 }

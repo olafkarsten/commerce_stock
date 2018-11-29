@@ -2,9 +2,6 @@
 
 namespace Drupal\Tests\commerce_stock\Kernel;
 
-use Drupal\field\Entity\FieldConfig;
-use Drupal\field\Entity\FieldStorageConfig;
-
 /**
  * Provides methods to query the transaction database.
  */
@@ -13,11 +10,11 @@ trait StockTransactionQueryTrait {
   /**
    * Return the last transaction for a entity.
    *
-   * @param $entity_id
-   *   The id of the entity to
+   * @param string $entity_id
+   *   The id of the entity to.
    *
    * @return obj
-   *  The transaction.
+   *   The transaction.
    */
   protected function getLastEntityTransaction($entity_id) {
     $connection = \Drupal::database();
@@ -35,7 +32,7 @@ trait StockTransactionQueryTrait {
    * Return the last transaction in the table.
    *
    * @return obj
-   *  The transaction.
+   *   The transaction.
    */
   protected function getLastTransaction() {
     $connection = \Drupal::database();

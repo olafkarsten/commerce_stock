@@ -21,7 +21,7 @@ use Drupal\Core\Link;
  *   }
  * )
  */
-class TransactionFormStockLevelWidget extends WidgetBase {
+class TransactionFormLinkWidget extends WidgetBase {
 
   /**
    * {@inheritdoc}
@@ -60,10 +60,9 @@ class TransactionFormStockLevelWidget extends WidgetBase {
     // Get the available stock level.
     $level = $field->available_stock;
     $link = Link::createFromRoute(
-      $this->t('Transaction form'),
+      $this->t('transaction form'),
       'commerce_stock_ui.stock_transactions2',
-      ['commerce_product_v_id' => $entity->id()],
-      ['attributes' => ['target' => '_blank']]
+      ['commerce_product_v_id' => $entity->id()]
     )->toString();
     $element['stock_level'] = [
       '#type' => 'html_tag',

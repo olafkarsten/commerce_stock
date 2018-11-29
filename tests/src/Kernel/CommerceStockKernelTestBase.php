@@ -22,4 +22,5 @@ abstract class CommerceStockKernelTestBase extends CommerceKernelTestBase {
     'commerce_stock_local',
     'commerce_stock_field',
   ];
+
 }
