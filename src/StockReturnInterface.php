@@ -31,6 +31,6 @@ interface StockReturnInterface {
    * @param string $message
    *   The message.
    */
-  public function returnStock(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $unit_cost, $currency_code, $user_id, $order_id = null, $message = NULL);
+  public function returnStock(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $unit_cost, $currency_code, $user_id, $order_id = NULL, $message = NULL);
 
 }
