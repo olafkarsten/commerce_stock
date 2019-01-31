@@ -3,6 +3,7 @@
 namespace Drupal\commerce_stock_ui\Form;
 
 use Drupal\commerce_product\ProductVariationStorage;
+use Drupal\commerce_stock\Plugin\StockTransactionTypesManager;
 use Drupal\commerce_stock\StockServiceManager;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -36,6 +37,13 @@ class StockTransactions2 extends FormBase {
   protected $request;
 
   /**
+   * The stock transaction type manager.
+   *
+   * @var \Drupal\commerce_stock\Plugin\StockTransactionTypesManagerInterface
+   */
+  protected $stockTransactionTypesManager;
+
+  /**
    * Constructs a StockTransactions2 object.
    *
    * @param \Drupal\commerce_product\ProductVariationStorage $productVariationStorage
@@ -44,11 +52,19 @@ class StockTransactions2 extends FormBase {
    *   The stock service manager.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current request.
+   * @param \Drupal\commerce_stock\Plugin\StockTransactionTypesManager $stock_transaction_types_manager
+   *   The transaction types manager.
    */
-  public function __construct(ProductVariationStorage $productVariationStorage, StockServiceManager $stockServiceManager, Request $request) {
-    $this->productVariationStorage = $productVariationStorage;
-    $this->stockServiceManager = $stockServiceManager;
+  public function __construct(
+    ProductVariationStorage $product_variation_storage,
+    StockServiceManager $stock_service_manager,
+    Request $request,
+    StockTransactionTypesManager $stock_transaction_types_manager
+  ) {
+    $this->productVariationStorage = $product_variation_storage;
+    $this->stockServiceManager = $stock_service_manager;
     $this->request = $request;
+    $this->stockTransactionTypesManager = $stock_transaction_types_manager;
   }
 
   /**
@@ -56,9 +72,11 @@ class StockTransactions2 extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity_type.manager')->getStorage('commerce_product_variation'),
+      $container->get('entity_type.manager')
+        ->getStorage('commerce_product_variation'),
       $container->get('commerce_stock.service_manager'),
-      $container->get('request_stack')->getCurrentRequest()
+      $container->get('request_stack')->getCurrentRequest(),
+      $container->get('plugin.manager.stock_transaction_types')
     );
   }
 
@@ -67,6 +85,23 @@ class StockTransactions2 extends FormBase {
    */
   public function getFormId() {
     return 'commerce_stock_transactions2';
+  }
+
+  protected function getTransactionTypes() {
+    $options = [];
+    $definitions = $this->stockTransactionTypesManager->getDefinitions();
+    foreach ($definitions as $plugin_id => $definition) {
+      $options[$plugin_id] = $definition;
+    }
+    return $options;
+  }
+
+  protected function getOptionLabels($options) {
+    $labels = [];
+    foreach ($options as $plugin_id => $definition) {
+      $labels[$plugin_id] = $definition['label']->render();
+    }
+    return $labels;
   }
 
   /**
@@ -89,104 +124,49 @@ class StockTransactions2 extends FormBase {
     foreach ($locations as $location) {
       $location_options[$location->getId()] = $location->getName();
     }
+    $transactionTypes = $this->getTransactionTypes();
+    $transactionOptions = $this->getOptionLabels($transactionTypes);
+    $activeTransactionTypeId = 'stock_in';
 
-    $form['transaction_type'] = [
+    if (!empty($form_state->getValue('transaction_type_selection'))) {
+      $activeTransactionTypeId = $form_state->getValue('transaction_type_selection');
+    }
+
+    $activeTransactionType = $this->stockTransactionTypesManager
+      ->createInstance(
+        $activeTransactionTypeId,
+        ['purchasable_entity' => $product_variation,]
+      );
+
+    $form['transaction_form_container'] = [
+      '#type' => 'container',
+      '#title' => $this->t('Choose a transaction type'),
+      '#weight' => 0
+    ];
+
+    $form['transaction_form_container']['transaction_type_selection'] = [
       '#type' => 'select',
       '#title' => $this->t('Transaction type'),
-      '#options' => [
-        'receiveStock' => $this->t('Receive stock'),
-        'sellStock' => $this->t('Sell stock'),
-        'returnStock' => $this->t('Return stock'),
-        'moveStock' => $this->t('Move stock'),
+      '#options' => $transactionOptions,
+      '#default_value' => $activeTransactionType->getPluginId(),
+      '#ajax' => [
+        'callback' => [get_class($this), 'ajaxRefresh'],
+        'wrapper' => 'transaction-details-wrapper',
       ],
+      '#access' => count($transactionOptions) > 1,
     ];
+    $form['#transaction_types'] = $transactionTypes;
     $form['product_variation_id'] = [
       '#type' => 'value',
       '#value' => $variation_id,
     ];
-    $form['source'] = [
-      '#type' => 'fieldset',
-      '#title' => $this->t('Source location'),
-    ];
-    $form['source']['source_location'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Location'),
-      '#options' => $location_options,
-    ];
-    $form['source']['source_zone'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Zone/Bins'),
-      '#description' => $this->t('The location zone (bins)'),
-      '#size' => 60,
-      '#maxlength' => 50,
-    ];
-    $form['target'] = [
-      '#type' => 'fieldset',
-      '#title' => $this->t('Move target'),
-      '#states' => [
-        'visible' => [
-          ':input[name="transaction_type"]' => ['value' => 'moveStock'],
-        ],
-      ],
-    ];
-    $form['target']['target_location'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Target Location'),
-      '#options' => $location_options,
-    ];
-    $form['target']['target_zone'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Zone/Bins'),
-      '#description' => $this->t('The location zone (bins)'),
-      '#size' => 60,
-      '#maxlength' => 50,
-    ];
-    $form['user'] = [
-      '#type' => 'entity_autocomplete',
-      '#title' => $this->t('Optional user'),
-      '#target_type' => 'user',
-      '#selection_handler' => 'default',
-      '#states' => [
-        'visible' => [
-          ':input[name="transaction_type"]' => [
-            ['value' => 'sellStock'],
-            ['value' => 'returnStock'],
-          ],
-        ],
-      ],
 
-    ];
-    $form['order'] = [
-      '#type' => 'entity_autocomplete',
-      '#title' => $this->t('Optional order number'),
-      '#target_type' => 'commerce_order',
-      '#selection_handler' => 'default',
-      '#states' => [
-        'visible' => [
-          ':input[name="transaction_type"]' => [
-            ['value' => 'sellStock'],
-            ['value' => 'returnStock'],
-          ],
-        ],
-      ],
-    ];
-    $form['transaction_qty'] = [
-      '#type' => 'number',
-      '#title' => $this->t('Quantity'),
-      '#default_value' => '1',
-      '#step' => '0.01',
-      '#required' => TRUE,
-    ];
-    $form['transaction_note'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Note'),
-      '#description' => $this->t('A note for the transaction'),
-      '#maxlength' => 64,
-      '#size' => 64,
-    ];
+    $form = $activeTransactionType->buildForm($form, $form_state);
+
     $form['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Submit'),
+      '#weight' => 100
     ];
 
     return $form;
@@ -200,6 +180,13 @@ class StockTransactions2 extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
+  }
+
+  public static function ajaxRefresh(
+    array $form,
+    FormStateInterface $form_state
+  ) {
+    return $form['transaction_details_form'];
   }
 
   /**

@@ -25,3 +25,7 @@ services:
   plugin.manager.stock_events:
     class: Drupal\commerce_stock\Plugin\StockEventsManager
     parent: default_plugin_manager
+
+  plugin.manager.stock_transaction_types:
+    class: Drupal\commerce_stock\Plugin\StockTransactionTypesManager
+    parent: default_plugin_manager
