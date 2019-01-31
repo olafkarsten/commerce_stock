@@ -38,6 +38,6 @@ interface StockUpdateInterface {
    * @return int
    *   Return the ID of the transaction.
    */
-  public function createTransaction(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $transaction_type_id, $user_id, $order_id = null, array $metadata);
+  public function createTransaction(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $transaction_type_id, $user_id, $order_id = NULL, array $metadata);
 
 }
