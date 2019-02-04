@@ -13,7 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
  *   description = @Translation("Use this one to move stock between different locations and/or zones."),
  * )
  */
-class StockMove extends TransactionTypeFormBase {
+class StockMove extends TransactionTypeBase {
 
   /**
    * @inheritdoc
@@ -28,7 +28,6 @@ class StockMove extends TransactionTypeFormBase {
       '#title' => $this->t('Source'),
       '#weight' => 20,
     ];
-
     $form['transaction_details_form']['source']['location'] = [
       '#type' => 'select',
       '#title' => $this->t('From: Location'),
@@ -36,7 +35,6 @@ class StockMove extends TransactionTypeFormBase {
       '#options' => $locationOptions,
       '#access' => count($locationOptions) > 1,
     ];
-
     $form['transaction_details_form']['source']['zone'] = [
       '#type' => 'textfield',
       '#title' => $this->t('From: Zone/Bins'),
@@ -44,7 +42,6 @@ class StockMove extends TransactionTypeFormBase {
       '#size' => 60,
       '#maxlength' => 50,
     ];
-
     $form['transaction_details_form']['target'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Target'),
@@ -78,6 +75,13 @@ class StockMove extends TransactionTypeFormBase {
       return $message;
     }
     return $this->pluginDefinition['log_message'] ? $this->pluginDefinition['log_message']->render() : NULL;
+  }
+
+  /**
+   * @inheritdoc
+   */
+  public function submitForm(array $form, FormStateInterface $form_state) {
+    // TODO: Implement submitForm() method.
   }
 
 }

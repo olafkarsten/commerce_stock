@@ -21,15 +21,6 @@ class StockSale extends StockOut {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildForm($form, $form_state);
-
-    $form['transaction_details_form']['order'] = [
-      '#type' => 'entity_autocomplete',
-      '#title' => $this->t('Optional order number'),
-      '#target_type' => 'commerce_order',
-      '#selection_handler' => 'default',
-      '#weight' => 40,
-    ];
-
     $form['transaction_details_form']['#description'] = $this->getDescription();
     return $form;
   }

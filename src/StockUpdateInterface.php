@@ -30,14 +30,23 @@ interface StockUpdateInterface {
    *   was not triggered by an order.
    * @param array $metadata
    *   Holds all the optional values those are:
-   *     - related_tid, the related transaction id. (int)
-   *     - unit_cost, the unit cost (float)
+   *     - related_tid: the related transaction id. (int)
+   *     - unit_cost: the unit cost (float)
    *     - currency: the currency of the unit cost (string)
-   *     - data: Serialized data array.
+   *     - data: array of arbitrary data.
    *
    * @return int
    *   Return the ID of the transaction.
    */
-  public function createTransaction(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $transaction_type_id, $user_id, $order_id = NULL, array $metadata);
+  public function createTransaction(
+    PurchasableEntityInterface $entity,
+    $location_id,
+    $zone,
+    $quantity,
+    $transaction_type_id,
+    $user_id,
+    $order_id = NULL,
+    array $metadata
+  );
 
 }

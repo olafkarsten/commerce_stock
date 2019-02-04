@@ -11,9 +11,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * The second part of a two part create stock transaction form.
+ * Provides a form to create single transactions for a certain product variation.
+ *
+ * The form allows for selecting a single product variation and after some
+ * ajax magic, creating a transaction for the selected variation.
  */
-class StockTransactions2 extends FormBase {
+class StockTransactionForm extends FormBase {
 
   /**
    * The product variation storage.
@@ -84,7 +87,7 @@ class StockTransactions2 extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'commerce_stock_transactions2';
+    return 'commerce_stock_create_single_transaction';
   }
 
   /**
@@ -127,14 +130,18 @@ class StockTransactions2 extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
 
     $variation_id = NULL;
-    if ($this->request->query->has('commerce_product_v_id')) {
-      $variation_id = $this->request->query->get('commerce_product_v_id');
+    // Using the same query parameter as commerce core here.
+    // @see ProductVariationStorage::loadFromContext
+    if ($this->request->query->has('v')) {
+      $variation_id = $this->request->query->get('v');
     }
     else {
       // If we have some variation in the form state, use this.
       $variation_id = $form_state->getValue('product_variation');
     }
 
+    // We need all the wrappers here, to ensure the ajax callbacks have something
+    // to attach their payload.
     $form['purchasable_wrapper'] = [
       '#type' => 'container',
     ];
@@ -162,12 +169,12 @@ class StockTransactions2 extends FormBase {
       '#submit' => ['::firstStepSubmit'],
     ];
 
+    // Bailout, we don't need the full form without the purchasable entity.
     if (!$variation_id) {
       return $form;
     }
 
     $productVariation = $this->productVariationStorage->load($variation_id);
-
     $stockService = $this->stockServiceManager->getService($productVariation);
     $locations = $stockService->getStockChecker()->getLocationList(TRUE);
     $location_options = [];
@@ -189,6 +196,14 @@ class StockTransactions2 extends FormBase {
         ['purchasable_entity' => $productVariation]
       );
 
+    $form['transaction_type'] = [
+      '#type' => 'value',
+      '#value' => $activeTransactionType
+    ];
+
+    // Get the subform for the selected transaction type.
+    $form = $activeTransactionType->buildForm($form, $form_state);
+
     $form['transaction_form_container'] = [
       '#type' => 'container',
       '#title' => $this->t('Choose a transaction type'),
@@ -201,18 +216,16 @@ class StockTransactions2 extends FormBase {
       '#options' => $transactionOptions,
       '#default_value' => $activeTransactionType->getPluginId(),
       '#ajax' => [
-        'callback' => [get_class($this), 'ajaxRefresh'],
+        'callback' => '::ajaxRefresh',
         'wrapper' => 'transaction-details-wrapper',
       ],
       '#access' => count($transactionOptions) > 1,
     ];
-    $form['#transaction_types'] = $transactionTypes;
-    $form['product_variation_id'] = [
-      '#type' => 'value',
-      '#value' => $productVariation->id(),
-    ];
 
-    $form = $activeTransactionType->buildForm($form, $form_state);
+    $form['product_variation'] = [
+      '#type' => 'value',
+      '#value' => $productVariation,
+    ];
 
     $form['submit'] = [
       '#type' => 'submit',
@@ -227,19 +240,22 @@ class StockTransactions2 extends FormBase {
    * {@inheritdoc}
    *
    * @todo: We need to check the product is managed by a stock service. Or
-   * remove this override as it does nothing.
+   * remove this override as it does nothing useful. :olafkarsten
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
   }
 
   /**
-   * Ajax callback.
+   * Ajax callback for transaction type selection form element.
    *
    * @param array $form
+   *   The form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
    *
-   * @return mixed
+   * @return array
+   *   The (sub) form.
    */
   public static function ajaxRefresh(
     array $form,
@@ -252,6 +268,7 @@ class StockTransactions2 extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+
     $transaction_type = $form_state->getValue('transaction_type');
     $product_variation_id = $form_state->getValue('product_variation_id');
     $source_location = $form_state->getValue('source_location');
@@ -262,41 +279,26 @@ class StockTransactions2 extends FormBase {
 
     if ($transaction_type == 'receiveStock') {
       $this->stockServiceManager->receiveStock($product_variation, $source_location, $source_zone, $qty, NULL, $currency_code = NULL, $transaction_note);
-      $this->messenger()->addMessage($this->t('@qty has been added to "@variation_title" using a "Received Stock" transaction.', ['@qty' => $qty, '@variation_title' => $product_variation->getTitle()]));
     }
     elseif ($transaction_type == 'sellStock') {
       $order_id = $form_state->getValue('order');
       $user_id = $form_state->getValue('user');
       $this->stockServiceManager->sellStock($product_variation, $source_location, $source_zone, $qty, NULL, $currency_code = NULL, $order_id, $user_id, $transaction_note);
-      $this->messenger()->addMessage($this->t('@qty has been removed from "@variation_title" using a "Sell Stock" transaction.', ['@qty' => $qty, '@variation_title' => $product_variation->getTitle()]));
     }
     elseif ($transaction_type == 'returnStock') {
       $order_id = $form_state->getValue('order');
       $user_id = $form_state->getValue('user');
       $this->stockServiceManager->returnStock($product_variation, $source_location, $source_zone, $qty, NULL, $currency_code = NULL, $order_id, $user_id, $transaction_note);
-      $this->messenger()->addMessage($this->t('@qty has been added to "@variation_title" using a "Return Stock" transaction.', ['@qty' => $qty, '@variation_title' => $product_variation->getTitle()]));
     }
     elseif ($transaction_type == 'moveStock') {
       $target_location = $form_state->getValue('target_location');
       $target_zone = $form_state->getValue('target_zone');
       $this->stockServiceManager->moveStock($product_variation, $source_location, $target_location, $source_zone, $target_zone, $qty, NULL, $currency_code = NULL, $transaction_note);
-
-      // Display notification for end users.
-      $target_location_entity = \Drupal::entityTypeManager()->getStorage('commerce_stock_location')->load($target_location);
-      $target_location_name = $target_location_entity->getName();
-      $source_location_entity = \Drupal::entityTypeManager()->getStorage('commerce_stock_location')->load($source_location);
-      $source_location_name = $source_location_entity->getName();
-      $this->messenger()->addMessage($this->t('@qty has been moved from "@source_location" to "@target_location" for "@variation_title" using a "Move Stock" transaction.', [
-        '@qty' => $qty,
-        '@variation_title' => $product_variation->getTitle(),
-        '@source_location' => $source_location_name,
-        '@target_location' => $target_location_name,
-      ]));
     }
   }
 
   /**
-   * Should only be called if javasript is disabled.
+   * Ajax callback for the product variatione selection part of the form.
    */
   public function firstStepSubmit(
     array &$form,

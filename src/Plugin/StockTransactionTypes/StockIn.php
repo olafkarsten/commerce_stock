@@ -14,7 +14,7 @@ use Drupal\Core\Form\FormStateInterface;
  *   log_message = @Translation("Stock added with no further details."),
  * )
  */
-class StockIn extends TransactionTypeFormBase {
+class StockIn extends TransactionTypeBase {
 
   /**
    * @inheritdoc
@@ -48,7 +48,6 @@ class StockIn extends TransactionTypeFormBase {
       '#maxlength' => 50,
     ];
 
-    $form['transaction_details_form']['transaction_qty']['#min'] = $form['transaction_details_form']['transaction_qty']['step'];
     $form['transaction_details_form']['transaction_note']['#default_value'] = $this->getTransactionDefaultLogMessage();
     return $form;
   }
@@ -61,7 +60,27 @@ class StockIn extends TransactionTypeFormBase {
     if ($message) {
       return $message;
     }
-    return $this->pluginDefinition['log_message'] ? $this->pluginDefinition['log_message']->render() : NULL;
+    return $this->pluginDefinition['log_message'] ? $this->pluginDefinition['log_message']->render() : '';
+  }
+
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array $form, FormStateInterface $form_state) {
+    $data = parent::extractTransactionData($form, $form_state);
+    $transaction_note = !empty($data['transaction_note']) ?: $this->getTransactionDefaultLogMessage();
+    $metadata = array_merge(['message' => $transaction_note], $data['metadata']);
+
+    $this->createTransaction(
+      $data['source']['location'],
+      $data['source']['zone'],
+      $data['quantity'],
+      $this->getPluginId(),
+      $data['user_id'],
+      $data['order_id'],
+      $metadata
+    );
   }
 
 }

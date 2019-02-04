@@ -14,7 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Provides the base class for forms.
  */
-abstract class TransactionTypeFormBase extends PluginBase implements StockTransactionTypesInterface {
+abstract class TransactionTypeBase extends PluginBase implements StockTransactionTypesInterface {
 
   use StringTranslationTrait;
 
@@ -78,7 +78,10 @@ abstract class TransactionTypeFormBase extends PluginBase implements StockTransa
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    return ['purchasable_entity' => NULL];
+    return [
+      'purchasable_entity' => NULL,
+      'quantity_step' => 0.01
+    ];
   }
 
   /**
@@ -137,8 +140,11 @@ abstract class TransactionTypeFormBase extends PluginBase implements StockTransa
 
     $config = $this->getConfiguration();
     $stockService = $this->stockServiceManager->getService($config['purchasable_entity']);
-    $form['locations'] = $stockService->getStockChecker()
-      ->getLocationList(TRUE);
+    $form['locations'] = [
+      '#type' => 'value',
+      '#value' => $stockService->getStockChecker()
+        ->getLocationList(TRUE),
+    ];
 
     // Allow forms to modify the page title.
     $form['#process'][] = [get_class($this), 'updatePageTitle'];
@@ -152,7 +158,7 @@ abstract class TransactionTypeFormBase extends PluginBase implements StockTransa
       '#weight' => 10,
     ];
 
-    $form['transaction_details_form']['transaction_qty'] = [
+    $form['transaction_details_form']['quantity'] = [
       '#type' => 'number',
       '#title' => $this->t('Quantity'),
       '#default_value' => '1',
@@ -161,9 +167,13 @@ abstract class TransactionTypeFormBase extends PluginBase implements StockTransa
       '#weight' => 0,
     ];
 
-    $form['transaction_details_form']['user_id'] = [
-      '#type' => 'hidden',
-      '#value' => $this->currentUser->id(),
+    $form['transaction_details_form']['order'] = [
+      '#type' => 'entity_autocomplete',
+      '#title' => $this->t('Optional order number'),
+      '#target_type' => 'commerce_order',
+      '#selection_handler' => 'default',
+      '#weight' => 40,
+      '#required' => FALSE,
     ];
 
     $form['transaction_details_form']['transaction_note'] = [
@@ -174,6 +184,11 @@ abstract class TransactionTypeFormBase extends PluginBase implements StockTransa
       '#size' => 64,
       '#default_value' => '',
       '#weight' => 50,
+    ];
+
+    $form['transaction_details_form']['user_id'] = [
+      '#type' => 'hidden',
+      '#value' => $this->currentUser->id(),
     ];
 
     return $form;
@@ -200,14 +215,16 @@ abstract class TransactionTypeFormBase extends PluginBase implements StockTransa
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array $form, FormStateInterface $form_state) {
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
-  }
+  abstract public function submitForm(
+    array $form,
+    FormStateInterface $form_state
+  );
 
   /**
    * Updates the page title based on the form's #page_title property.
@@ -227,7 +244,7 @@ abstract class TransactionTypeFormBase extends PluginBase implements StockTransa
     FormStateInterface $form_state,
     array &$complete_form
   ) {
-    if (!empty(form['#page_title'])) {
+    if (!empty($form['#page_title'])) {
       $complete_form['#title'] = $form['#page_title'];
     }
     return $form;
@@ -257,7 +274,114 @@ abstract class TransactionTypeFormBase extends PluginBase implements StockTransa
    * @inheritdoc
    */
   public function getTransactionDefaultLogMessage() {
-    return $this->configuration['log_message'] ? $this->t($this->configuration['log_message']) : NULL;
+    return !empty($this->configuration['log_message']) ? $this->t($this->configuration['log_message']) : NULL;
+  }
+
+  /**
+   * Prepoplate data for the stock transaction for all the common stuff like
+   * qty and user.
+   *
+   * @param array $form
+   *   The form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  public static function extractTransactionData(
+    array $form,
+    FormStateInterface $form_state
+  ) {
+    $data = [];
+    $data['source']['location'] = $form_state->hasValue([
+      'transaction_details_form',
+      'source',
+      'location',
+    ]) ? $form_state->getValue([
+      'transaction_details_form',
+      'source',
+      'location',
+    ]) : NULL;
+    $data['source']['zone'] = $form_state->hasValue([
+      'transaction_details_form',
+      'source',
+      'zone',
+    ]) ? $form_state->getValue([
+      'transaction_details_form',
+      'source',
+      'zone',
+    ]) : NULL;
+    $data['target']['location'] = $form_state->hasValue([
+      'transaction_details_form',
+      'target',
+      'location',
+    ]) ? $form_state->getValue([
+      'transaction_details_form',
+      'target',
+      'location',
+    ]) : NULL;
+    $data['target']['zone'] = $form_state->hasValue([
+      'transaction_details_form',
+      'target',
+      'zone',
+    ]) ? $form_state->getValue([
+      'transaction_details_form',
+      'target',
+      'zone',
+    ]) : NULL;
+    $data['quantity'] = $form_state->getValue([
+      'transaction_details_form',
+      'quantity',
+    ]);
+    $data['user_id'] = $form_state->getValue([
+      'transaction_details_form',
+      'user_id',
+    ]);
+    $data['transaction_note'] = $form_state->hasValue([
+      'transaction_details_form',
+      'transaction_note',
+    ]) ? $form_state->getValue([
+      'transaction_details_form',
+      'transaction_note',
+    ]) : '';
+    $data['order_id'] = $form_state->hasValue([
+      'transaction_details_form',
+      'order',
+    ]) ? $form_state->getValue([
+      'transaction_details_form',
+      'order',
+    ]) : null;
+    return $data;
+  }
+
+  /**
+   * Create the transaction.
+   *
+   * @see \Drupal\commerce_stock\StockUpdateInterface for more information.
+   */
+  protected function createTransaction(
+    $location_id,
+    $zone,
+    $quantity,
+    $transaction_type_id,
+    $user_id,
+    $order_id = NULL,
+    array $metadata = []
+  ) {
+    $purchasableEntity = $this->configuration['purchasable_entity'];
+    /** @var \Drupal\commerce_stock\StockUpdateInterface $stockUpdater */
+    $stockUpdater = $this->stockServiceManager->getService($purchasableEntity)
+      ->getStockUpdater();
+
+    return $stockUpdater->createTransaction(
+      $purchasableEntity,
+      $location_id,
+      $zone,
+      $quantity,
+      $transaction_type_id,
+      $user_id,
+      $order_id,
+      $metadata
+    );
+
   }
 
 }
