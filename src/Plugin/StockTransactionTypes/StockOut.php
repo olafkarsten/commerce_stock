@@ -14,7 +14,7 @@ use Drupal\Core\Form\FormStateInterface;
  *   log_message = @Translation("Stock removed with no further details."),
  * )
  */
-class StockOut extends TransactionTypeFormBase {
+class StockOut extends TransactionTypeBase {
 
   /**
    * @inheritdoc
@@ -59,6 +59,25 @@ class StockOut extends TransactionTypeFormBase {
       return $message;
     }
     return $this->pluginDefinition['log_message'] ? $this->pluginDefinition['log_message']->render() : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array $form, FormStateInterface $form_state) {
+    $data = parent::extractTransactionData($form, $form_state);
+    $transaction_note = empty($data['transaction_note']) ?: $this->getTransactionDefaultLogMessage();
+    $metadata = array_merge(['message' => $transaction_note], $data['metadata']);
+
+    $this->createTransaction(
+      $data['source']['location'],
+      $data['source']['zone'],
+      $data['quantity'],
+      $this->getPluginId(),
+      $data['user_id'],
+      $data['order_id'],
+      $metadata
+    );
   }
 
 }

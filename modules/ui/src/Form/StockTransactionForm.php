@@ -11,9 +11,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * The second part of a two part create stock transaction form.
+ * Provides a form to create single transactions for a certain product variation.
+ *
+ * The form allows for selecting a single product variation and after some
+ * ajax magic, creating a transaction for the selected variation.
  */
-class StockTransactions2 extends FormBase {
+class StockTransactionForm extends FormBase {
 
   /**
    * The product variation storage.
@@ -84,7 +87,7 @@ class StockTransactions2 extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'commerce_stock_transactions2';
+    return 'commerce_stock_create_single_transaction';
   }
 
   /**
@@ -127,14 +130,18 @@ class StockTransactions2 extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
 
     $variation_id = NULL;
-    if ($this->request->query->has('commerce_product_v_id')) {
-      $variation_id = $this->request->query->get('commerce_product_v_id');
+    // Using the same query parameter as commerce core here.
+    // @see ProductVariationStorage::loadFromContext
+    if ($this->request->query->has('v')) {
+      $variation_id = $this->request->query->get('v');
     }
     else {
       // If we have some variation in the form state, use this.
       $variation_id = $form_state->getValue('product_variation');
     }
 
+    // We need all the wrappers here, to ensure the ajax callbacks have something
+    // to attach their payload.
     $form['purchasable_wrapper'] = [
       '#type' => 'container',
     ];
@@ -162,12 +169,12 @@ class StockTransactions2 extends FormBase {
       '#submit' => ['::firstStepSubmit'],
     ];
 
+    // Bailout, we don't need the full form without the purchasable entity.
     if (!$variation_id) {
       return $form;
     }
 
     $productVariation = $this->productVariationStorage->load($variation_id);
-
     $stockService = $this->stockServiceManager->getService($productVariation);
     $locations = $stockService->getStockChecker()->getLocationList(TRUE);
     $location_options = [];
@@ -189,6 +196,14 @@ class StockTransactions2 extends FormBase {
         ['purchasable_entity' => $productVariation]
       );
 
+    $form['transaction_type'] = [
+      '#type' => 'value',
+      '#value' => $activeTransactionType
+    ];
+
+    // Get the subform for the selected transaction type.
+    $form = $activeTransactionType->buildForm($form, $form_state);
+
     $form['transaction_form_container'] = [
       '#type' => 'container',
       '#title' => $this->t('Choose a transaction type'),
@@ -206,19 +221,16 @@ class StockTransactions2 extends FormBase {
       ],
       '#access' => count($transactionOptions) > 1,
     ];
-    $form['#transaction_types'] = $transactionTypes;
-    $form['product_variation_id'] = [
-      '#type' => 'value',
-      '#value' => $productVariation->id(),
-    ];
 
-    $form = $activeTransactionType->buildForm($form, $form_state);
+    $form['product_variation'] = [
+      '#type' => 'value',
+      '#value' => $productVariation,
+    ];
 
     $form['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Submit'),
       '#weight' => 100,
-
     ];
 
     return $form;
@@ -235,12 +247,15 @@ class StockTransactions2 extends FormBase {
   }
 
   /**
-   *
+   * Ajax callback for transaction type selection form element.
    *
    * @param array $form
+   *   The form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
    *
-   * @return mixed
+   * @return array
+   *   The (sub) form.
    */
   public static function ajaxRefresh(
     array $form,
@@ -283,7 +298,7 @@ class StockTransactions2 extends FormBase {
   }
 
   /**
-   * Should only be called if javasript is disabled.
+   * Ajax callback for the product variatione selection part of the form.
    */
   public function firstStepSubmit(
     array &$form,

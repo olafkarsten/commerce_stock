@@ -97,7 +97,7 @@ interface StockTransactionTypesInterface extends ConfigurablePluginInterface, Pl
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state of the complete form.
    */
-  public function validateForm(array &$form, FormStateInterface $form_state);
+  public function validateForm(array $form, FormStateInterface $form_state);
 
   /**
    * Submits the form.
@@ -108,6 +108,6 @@ interface StockTransactionTypesInterface extends ConfigurablePluginInterface, Pl
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state of the complete form.
    */
-  public function submitForm(array &$form, FormStateInterface $form_state);
+  public function submitForm(array $form, FormStateInterface $form_state);
 
 }
