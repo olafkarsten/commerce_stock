@@ -22,7 +22,7 @@ class StockIn extends TransactionTypeBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildForm($form, $form_state);
 
-    $locationOptions = $this->getLocationOptions($form['locations']);
+    $locationOptions = $this->getLocationOptions($form['locations']['#value']);
 
     $form['transaction_details_form']['#description'] = $this->getDescription();
 

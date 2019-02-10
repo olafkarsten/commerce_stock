@@ -1,0 +1,9 @@
+name: Commerce Stock UI Test
+type: module
+description: 'Test module for Commerce Stock UI.'
+package: Testing
+core: 8.x
+dependencies:
+  - commerce:commerce_stock
+  - commerce:commerce_stock_local
+  - commerce:commerce_stock_ui
