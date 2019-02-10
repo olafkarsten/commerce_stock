@@ -4,15 +4,23 @@ namespace Drupal\Tests\commerce_stock\Functional;
 
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductVariation;
+use Drupal\commerce_stock_local\Entity\StockLocation;
+use Drupal\commerce_store\StoreCreationTrait;
 use Drupal\field\Tests\EntityReference\EntityReferenceTestTrait;
+use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
+use Drupal\Tests\commerce\FunctionalJavascript\CommerceWebDriverTestBase;
+use Drupal\Tests\commerce\Traits\CommerceBrowserTestTrait;
 
 /**
  * Defines base class for commerce stock test cases.
  */
-abstract class StockBrowserTestBase extends CommerceBrowserTestBase {
+abstract class StockBrowserTestBase extends WebDriverTestBase {
 
   use EntityReferenceTestTrait;
+  use StoreCreationTrait;
+  use CommerceBrowserTestTrait;
 
   /**
    * Modules to enable.
@@ -24,7 +32,6 @@ abstract class StockBrowserTestBase extends CommerceBrowserTestBase {
     'commerce_product',
     'commerce_order',
     'commerce_stock',
-    'commerce_stock_ui',
     'field_ui',
     'options',
     'taxonomy',
@@ -62,7 +69,13 @@ abstract class StockBrowserTestBase extends CommerceBrowserTestBase {
    * {@inheritdoc}
    */
   protected function getAdministratorPermissions() {
-    return array_merge([
+    return [
+      'view the administration theme',
+      'access administration pages',
+      'access commerce administration pages',
+      'administer commerce_currency',
+      'administer commerce_store',
+      'administer commerce_store_type',
       'administer commerce_order',
       'administer commerce_product',
       'administer commerce_product_type',
@@ -70,7 +83,7 @@ abstract class StockBrowserTestBase extends CommerceBrowserTestBase {
       'administer commerce_product_variation fields',
       'administer commerce_product_variation display',
       'access commerce_product overview',
-    ], parent::getAdministratorPermissions());
+    ];
   }
 
   /**
@@ -80,8 +93,15 @@ abstract class StockBrowserTestBase extends CommerceBrowserTestBase {
     parent::setUp();
 
     $this->adminUser = $this->drupalCreateUser($this->getAdministratorPermissions());
-
     $this->stockServiceManager = $this->container->get('commerce_stock.service_manager');
+
+    $this->store = $this->createStore();
+
+    $location = StockLocation::create([
+      'type' => 'default',
+      'name' => 'TESTLOCATION'
+    ]);
+    $location->save();
 
     $this->stores = [];
     for ($i = 0; $i < 3; $i++) {
@@ -107,6 +127,14 @@ abstract class StockBrowserTestBase extends CommerceBrowserTestBase {
     ]);
     $product->save();
     $this->product = $product;
+  }
+
+  /**
+   * Waits for jQuery to become active and animations to complete.
+   */
+  protected function waitForAjaxToFinish() {
+    $condition = "(0 === jQuery.active && 0 === jQuery(':animated').length)";
+    $this->assertJsCondition($condition, 10000);
   }
 
 }

@@ -6,6 +6,7 @@ use Drupal\commerce\PurchasableEntityInterface;
 use Drupal\commerce_stock\StockServiceManagerInterface;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -17,6 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class TransactionTypeBase extends PluginBase implements StockTransactionTypesInterface {
 
   use StringTranslationTrait;
+  use DependencySerializationTrait;
 
   /**
    * The stock service.

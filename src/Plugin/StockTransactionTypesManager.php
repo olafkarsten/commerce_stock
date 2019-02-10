@@ -6,8 +6,6 @@ use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
-use Drupal\Core\Plugin\Discovery\ContainerDerivativeDiscoveryDecorator;
-use Drupal\Core\Plugin\Discovery\YamlDiscovery;
 
 /**
  * Provides the StockTranscationTypes plugin manager.
@@ -52,15 +50,7 @@ class StockTransactionTypesManager extends DefaultPluginManager implements Stock
    * {@inheritdoc}
    */
   protected function getDiscovery() {
-    $this->discovery = parent::getDiscovery();
-    if (!isset($this->discovery)) {
-      $this->discovery = new YamlDiscovery('stock_transaction_types', $this->moduleHandler->getModuleDirectories());
-      $this->discovery->addTranslatableProperty('label', 'label_context');
-      $this->discovery->addTranslatableProperty('description', 'description_context');
-      $this->discovery->addTranslatableProperty('log_message', 'log_message_context');
-      $this->discovery = new ContainerDerivativeDiscoveryDecorator($this->discovery);
-    }
-    return $this->discovery;
+    return parent::getDiscovery();;
   }
 
   /**
