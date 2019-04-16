@@ -1,13 +1,13 @@
 <?php
 
-namespace Drupal\commerce_stock\Plugin\StockTransactionTypes;
+namespace Drupal\commerce_stock_ui\Plugin\StockTransactionTypeForm;
 
 use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Generic Stock In Transaction.
  *
- * @StockTransactionTypes(
+ * @StockTransactionTypeForm(
  *   id = "stock_sale",
  *   label = @Translation("Stock sale"),
  *   description = @Translation("Transaction type usally used for customer orders."),

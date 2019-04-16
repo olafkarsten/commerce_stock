@@ -7,10 +7,10 @@ use Drupal\commerce_stock\Plugin\StockTransactionTypes;
 /**
  * Test transaction type
  *
- * @StockTransactionTypes(
- *   id = "test_transaction_type",
+ * @StockTransactionTypeForm(
+ *   id = "test_transaction_type_form",
  *   label = @Translation("TEST TRANSACTION TYPE"),
- *   description = @Translation("Transaction type usally used for testing."),
+ *   description = @Translation("Transaction type form sally used for testing."),
  *   log_message = @Translation("Stock test transaction type default log message."),
  * )
  */

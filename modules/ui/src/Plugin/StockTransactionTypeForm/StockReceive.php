@@ -1,13 +1,13 @@
 <?php
 
-namespace Drupal\commerce_stock\Plugin\StockTransactionTypes;
+namespace Drupal\commerce_stock_ui\Plugin\StockTransactionTypeForm;
 
 use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Generic Stock In Transaction.
  *
- * @StockTransactionTypes(
+ * @StockTransactionTypeForm(
  *   id = "stock_receive",
  *   label = @Translation("Stock receive"),
  *   description = @Translation("Transaction type to add stock most often due to a delivery."),

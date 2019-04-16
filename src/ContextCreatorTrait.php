@@ -11,20 +11,36 @@ use Drupal\commerce\PurchasableEntityInterface;
 trait ContextCreatorTrait {
 
   /**
-   * Returns the active context.
-   *
-   * This is to support UI calls.
+   * Returns the active commerce context.
    *
    * @param \Drupal\commerce\PurchasableEntityInterface $entity
    *   The purchasable entity (most likely a product variation entity).
    *
+   * @return \Drupal\commerce\Context
+   *   The context containing the customer & store.
    * @throws \Exception
+   *
+   */
+  public function getContext(PurchasableEntityInterface $entity) {
+    return $this->getContextDetails($entity);
+  }
+
+  /**
+   * Whether we deal with a valid commerce context.
+   *
+   * @param \Drupal\commerce\PurchasableEntityInterface $entity
+   *   The purchasable entity (most likely a product variation entity).
    *
    * @return \Drupal\commerce\Context
    *   The context containing the customer & store.
    */
-  public function getContext(PurchasableEntityInterface $entity) {
-    return $this->getContextDetails($entity);
+  public function isValidContext(PurchasableEntityInterface $entity) {
+    try {
+      $this->getContextDetails($entity);
+    } catch (\Exception $e) {
+      return FALSE;
+    }
+    return TRUE;
   }
 
   /**
@@ -33,14 +49,14 @@ trait ContextCreatorTrait {
    * @param \Drupal\commerce\PurchasableEntityInterface $entity
    *   The purchasable entity.
    *
+   * @return \Drupal\commerce\Context
+   *   The Stock service context.
    * @throws \Exception
    *   When the entity can't be purchased from the current store.
    *
    * @see \Drupal\commerce_cart\Form\AddToCartForm::selectStore()
    *   Original logic comes from this function.
    *
-   * @return \Drupal\commerce\Context
-   *   The Stock service context.
    */
   private function getContextDetails(PurchasableEntityInterface $entity) {
     // Make sure the current store is in the entity stores.

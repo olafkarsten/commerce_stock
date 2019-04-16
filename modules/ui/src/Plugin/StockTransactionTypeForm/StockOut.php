@@ -1,19 +1,20 @@
 <?php
 
-namespace Drupal\commerce_stock\Plugin\StockTransactionTypes;
+namespace Drupal\commerce_stock_ui\Plugin\StockTransactionTypeForm;
 
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Stock Move Transaction.
+ * Generic Stock In Transaction.
  *
- * @StockTransactionTypes(
- *   id = "stock_move",
- *   label = @Translation("Stock move"),
- *   description = @Translation("Use this one to move stock between different locations and/or zones."),
+ * @StockTransactionTypeForm(
+ *   id = "stock_out",
+ *   label = @Translation("Basic stock out"),
+ *   description = @Translation("A generic transaction type to remove stock for an item."),
+ *   log_message = @Translation("Stock removed with no further details."),
  * )
  */
-class StockMove extends TransactionTypeBase {
+class StockOut extends TransactionTypeFormBase {
 
   /**
    * @inheritdoc
@@ -23,11 +24,14 @@ class StockMove extends TransactionTypeBase {
 
     $locationOptions = $this->getLocationOptions($form['locations']['#value']);
 
+    $form['transaction_details_form']['#description'] = $this->getDescription();
+
     $form['transaction_details_form']['source'] = [
       '#type' => 'fieldset',
-      '#title' => $this->t('Source'),
+      '#title' => $this->t('Location'),
       '#weight' => 20,
     ];
+
     $form['transaction_details_form']['source']['location'] = [
       '#type' => 'select',
       '#title' => $this->t('From: Location'),
@@ -35,29 +39,11 @@ class StockMove extends TransactionTypeBase {
       '#options' => $locationOptions,
       '#access' => count($locationOptions) > 1,
     ];
+
     $form['transaction_details_form']['source']['zone'] = [
       '#type' => 'textfield',
       '#title' => $this->t('From: Zone/Bins'),
       '#description' => $this->t('The location zone (bins) to take the stock from.'),
-      '#size' => 60,
-      '#maxlength' => 50,
-    ];
-    $form['transaction_details_form']['target'] = [
-      '#type' => 'fieldset',
-      '#title' => $this->t('Target'),
-      '#weight' => 30,
-    ];
-    $form['transaction_details_form']['target']['location'] = [
-      '#type' => 'select',
-      '#title' => $this->t('To: Location'),
-      '#description' => $this->t('Target location for the stock transfer.'),
-      '#options' => $locationOptions,
-      '#access' => count($locationOptions) > 1,
-    ];
-    $form['transaction_details_form']['target']['zone'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('To: Zone/Bins'),
-      '#description' => $this->t('The location zone (bins) to move the stock to.'),
       '#size' => 60,
       '#maxlength' => 50,
     ];
@@ -78,10 +64,22 @@ class StockMove extends TransactionTypeBase {
   }
 
   /**
-   * @inheritdoc
+   * {@inheritdoc}
    */
   public function submitForm(array $form, FormStateInterface $form_state) {
-    // TODO: Implement submitForm() method.
+    $data = parent::extractTransactionData($form, $form_state);
+    $transaction_note = empty($data['transaction_note']) ?: $this->getTransactionDefaultLogMessage();
+    $metadata = array_merge(['message' => $transaction_note], $data['metadata']);
+
+    $this->createTransaction(
+      $data['source']['location'],
+      $data['source']['zone'],
+      $data['quantity'],
+      $this->getPluginId(),
+      $data['user_id'],
+      $data['order_id'],
+      $metadata
+    );
   }
 
 }

@@ -26,9 +26,9 @@ interface StockReceiveInterface {
    *   The currency code.
    * @param int $user_id
    *   The user ID.
-   * @param string $message
-   *   The message.
+   * @param string|null $transaction_note
+   *   The transaction note or NULL.
    */
-  public function receiveStock(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $unit_cost, $currency_code, $user_id, $message = NULL);
+  public function receiveStock(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $unit_cost, $currency_code, $user_id, $transaction_note = NULL);
 
 }

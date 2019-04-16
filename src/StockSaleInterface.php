@@ -28,9 +28,9 @@ interface StockSaleInterface {
    *   The order ID.
    * @param int $user_id
    *   The user ID.
-   * @param string $message
-   *   The message.
+   * @param string|null $transaction_note
+   *   The transaction note or NULL.
    */
-  public function sellStock(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $unit_cost, $currency_code, $order_id, $user_id, $message = NULL);
+  public function sellStock(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $unit_cost, $currency_code, $order_id, $user_id, $transaction_note = NULL);
 
 }

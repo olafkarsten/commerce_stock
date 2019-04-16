@@ -1,21 +1,26 @@
 <?php
 
-namespace Drupal\commerce_stock\Plugin;
+namespace Drupal\commerce_stock_ui\Plugin;
 
+use Drupal\commerce\PurchasableEntityInterface;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 
 /**
- * Provides the StockTranscationTypes plugin manager.
+ * Manages discovery and instantiation of commerce stock transaction types plugins.
+ *
+ * @see \Drupal\commerce_stock_ui\Annotation\StockTransactionTypeForm
+ * @see plugin_api
  */
-class StockTransactionTypesManager extends DefaultPluginManager implements StockTransactionTypesManagerInterface {
+class StockTransactionTypeFormManager extends DefaultPluginManager {
 
   /**
    * Provides default values for all stock transaction type plugins.
    *
-   * @var array
+   * @see \Drupal\commerce_stock_ui\Annotation\StockTransactionTypeForm
+   * @see plugin_api
    */
   protected $defaults = [
     // Add required and optional plugin properties.
@@ -41,9 +46,24 @@ class StockTransactionTypesManager extends DefaultPluginManager implements Stock
     CacheBackendInterface $cache_backend,
     ModuleHandlerInterface $module_handler
   ) {
-    parent::__construct('Plugin/StockTransactionTypes', $namespaces, $module_handler, '\Drupal\commerce_stock\Plugin\StockTransactionTypes\StockTransactionTypesInterface', '\Drupal\commerce_stock\Annotation\StockTransactionTypes');
-    $this->alterInfo('commerce_stock_transaction_types_info');
-    $this->setCacheBackend($cache_backend, 'commerce_stock_transaction_types_plugins');
+    parent::__construct('Plugin/StockTransactionTypeForm', $namespaces, $module_handler, '\Drupal\commerce_stock_ui\Plugin\StockTransactionTypeForm\StockTransactionTypeFormInterface', '\Drupal\commerce_stock_ui\Annotation\StockTransactionTypeForm');
+    $this->alterInfo('commerce_stock_transaction_type_form_info');
+    $this->setCacheBackend($cache_backend, 'commerce_stock_transaction_type_form_plugins');
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @return \Drupal\commerce_stock_ui\Plugin\StockTransactionTypeForm\StockTransactionTypeFormInterface
+   *   The transaction type plugin.
+   */
+  public function createInstance($plugin_id, array $configuration = [], PurchasableEntityInterface $purchasable_entity = NULL) {
+    $plugin = parent::createInstance($plugin_id, $configuration);
+    if (!$purchasable_entity) {
+      throw new \RuntimeException(sprintf('The %s transaction type form requires an purchasable entity.', $plugin_id));
+    }
+    $plugin->setPurchasableEntity($purchasable_entity);
+    return $plugin;
   }
 
   /**

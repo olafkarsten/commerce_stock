@@ -28,9 +28,9 @@ interface StockReturnInterface {
    *   The user ID.
    * @param int|null $order_id
    *   The order ID.
-   * @param string $message
-   *   The message.
+   * @param string|null $transaction_note
+   *   The transaction note or NULL.
    */
-  public function returnStock(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $unit_cost, $currency_code, $user_id, $order_id = NULL, $message = NULL);
+  public function returnStock(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $unit_cost, $currency_code, $user_id, $order_id = NULL, $transaction_note = NULL);
 
 }

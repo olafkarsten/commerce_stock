@@ -1,18 +1,18 @@
 <?php
 
-namespace Drupal\commerce_stock\Annotation;
+namespace Drupal\commerce_stock_ui\Annotation;
 
 use Drupal\Component\Annotation\Plugin;
 
 /**
- * Defines a Stock events item annotation object.
+ * Defines a Stock transaction type form item annotation object.
  *
- * @see \Drupal\commerce_stock\Plugin\StockEventsManager
+ * @see \Drupal\commerce_stock_ui\Plugin\StockTransactionTypeFormManager
  * @see plugin_api
  *
  * @Annotation
  */
-class StockTransactionTypes extends Plugin {
+class StockTransactionTypeForm extends Plugin {
 
   /**
    * The plugin ID.

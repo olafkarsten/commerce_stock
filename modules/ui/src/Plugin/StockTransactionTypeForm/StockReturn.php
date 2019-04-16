@@ -1,13 +1,13 @@
 <?php
 
-namespace Drupal\commerce_stock\Plugin\StockTransactionTypes;
+namespace Drupal\commerce_stock_ui\Plugin\StockTransactionTypeForm;
 
 use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Stock Return Transaction.
  *
- * @StockTransactionTypes(
+ * @StockTransactionTypeForm(
  *   id = "stock_return",
  *   label = @Translation("Stock return"),
  *   description = @Translation("Transaction type to be used for returning stock."),

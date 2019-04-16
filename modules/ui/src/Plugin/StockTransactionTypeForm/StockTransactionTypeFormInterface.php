@@ -1,7 +1,8 @@
 <?php
 
-namespace Drupal\commerce_stock\Plugin\StockTransactionTypes;
+namespace Drupal\commerce_stock_ui\Plugin\StockTransactionTypeForm;
 
+use Drupal\commerce\PurchasableEntityInterface;
 use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -10,45 +11,25 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 /**
  * Defines an interface for Stock events plugins.
  */
-interface StockTransactionTypesInterface extends ConfigurablePluginInterface, PluginInspectionInterface, ContainerFactoryPluginInterface {
-
-  const STOCK_IN = 1;
-
-  const STOCK_OUT = 2;
-
-  const STOCK_SALE = 4;
-
-  const STOCK_RETURN = 5;
-
-  const NEW_STOCK = 6;
-
-  const MOVEMENT_FROM = 7;
-
-  const MOVEMENT_TO = 8;
+interface StockTransactionTypeFormInterface extends ConfigurablePluginInterface, PluginInspectionInterface, ContainerFactoryPluginInterface {
 
   /**
-   * Sets the configuration for this plugin instance.
+   * Sets the purchasable entity.
    *
-   * The required configuration for each plugin is an entity
-   * that implements Drupal/commerce/PurchasableEntityInterface.
+   * @param \Drupal\commerce\PurchasableEntityInterface $purchasable_entity
+   *   The purchasable entity.
    *
-   * You can provide an transaction_log_message. This will override the
-   * default log message provdided by the plugin definition.
-   *
-   * @code
-   *   [
-   *    'purchasable_entity' => $entity,
-   *    'transaction_log_message' => $log,
-   *   ]
-   * @codeend
-   *
-   * @param array $configuration
-   *   An associative array containing the plugin's configuration.
-   *
-   * @throws \InvalidArgumentException
-   *   If the purchasable entity is missing.
+   * @return $this
    */
-  public function setConfiguration(array $configuration);
+  public function setPurchasableEntity(PurchasableEntityInterface $purchasable_entity);
+
+  /**
+   * Gets the purchasable entity.
+   *
+   * @return \Drupal\commerce\PurchasableEntityInterface $purchasable_entity
+   *   The purchasable entity.
+   */
+  public function getPurchasableEntity();
 
   /**
    * Gets the form label.
@@ -97,7 +78,7 @@ interface StockTransactionTypesInterface extends ConfigurablePluginInterface, Pl
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state of the complete form.
    */
-  public function validateForm(array $form, FormStateInterface $form_state);
+  public function validateTransactionTypeForm(array $form, FormStateInterface $form_state);
 
   /**
    * Submits the form.
@@ -108,6 +89,6 @@ interface StockTransactionTypesInterface extends ConfigurablePluginInterface, Pl
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state of the complete form.
    */
-  public function submitForm(array $form, FormStateInterface $form_state);
+  public function submitTransactionTypeForm(array $form, FormStateInterface $form_state);
 
 }

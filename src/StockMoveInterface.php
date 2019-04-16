@@ -30,9 +30,9 @@ interface StockMoveInterface {
    *   The currency code.
    * @param int $user_id
    *   The user ID.
-   * @param string $message
-   *   The message.
+   * @param string|null $transaction_note
+   *   The transaction note or NULL.
    */
-  public function moveStock(PurchasableEntityInterface $entity, $from_location_id, $to_location_id, $from_zone, $to_zone, $quantity, $unit_cost, $currency_code, $user_id, $message = NULL);
+  public function moveStock(PurchasableEntityInterface $entity, $from_location_id, $to_location_id, $from_zone, $to_zone, $quantity, $user_id, $unit_cost, $currency_code, $transaction_note = NULL);
 
 }

@@ -4,14 +4,12 @@ namespace Drupal\Tests\commerce_stock\Functional;
 
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductVariation;
+use Drupal\commerce_product\Entity\ProductVariationType;
 use Drupal\commerce_stock_local\Entity\StockLocation;
 use Drupal\commerce_store\StoreCreationTrait;
-use Drupal\field\Tests\EntityReference\EntityReferenceTestTrait;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
-use Drupal\Tests\BrowserTestBase;
-use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
-use Drupal\Tests\commerce\FunctionalJavascript\CommerceWebDriverTestBase;
 use Drupal\Tests\commerce\Traits\CommerceBrowserTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
 
 /**
  * Defines base class for commerce stock test cases.
@@ -108,16 +106,21 @@ abstract class StockBrowserTestBase extends WebDriverTestBase {
       $this->stores[] = $this->createStore();
     }
 
+    // Turn off title generation to allow explicit values to be used.
+    $variation_type = ProductVariationType::load('default');
+    $variation_type->setGenerateTitle(FALSE);
+    $variation_type->save();
+
     $variations = [];
     for ($i = 1; $i <= 3; $i++) {
       $variation = ProductVariation::create([
         'type' => 'default',
         'sku' => strtolower($this->randomMachineName()),
-        'title' => $this->randomString(),
         'status' => $i % 2,
+        'title' => $this->randomString(),
       ]);
       $variation->save();
-      $variations[] = $variation;
+      $variations[] = $this->reloadEntity($variation);
     }
     $this->variations = array_reverse($variations);
     $product = Product::create([

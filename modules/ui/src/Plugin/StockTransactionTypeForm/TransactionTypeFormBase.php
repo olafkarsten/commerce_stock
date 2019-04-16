@@ -1,10 +1,14 @@
 <?php
 
-namespace Drupal\commerce_stock\Plugin\StockTransactionTypes;
+namespace Drupal\commerce_stock_ui\Plugin\StockTransactionTypeForm;
 
+use Drupal\commerce\AjaxFormTrait;
+use Drupal\commerce\Element\CommerceElementTrait;
 use Drupal\commerce\PurchasableEntityInterface;
 use Drupal\commerce_stock\StockServiceManagerInterface;
+use Drupal\commerce_stock\StockTransactionsInterface;
 use Drupal\Component\Plugin\PluginBase;
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormStateInterface;
@@ -15,10 +19,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Provides the base class for forms.
  */
-abstract class TransactionTypeBase extends PluginBase implements StockTransactionTypesInterface {
+abstract class TransactionTypeFormBase extends PluginBase implements StockTransactionTypeFormInterface, StockTransactionsInterface {
 
   use StringTranslationTrait;
   use DependencySerializationTrait;
+  use AjaxFormTrait;
 
   /**
    * The stock service.
@@ -28,12 +33,21 @@ abstract class TransactionTypeBase extends PluginBase implements StockTransactio
   protected $stockServiceManger;
 
   /**
+   * The current user.
+   *
    * @var \Drupal\Core\Session\AccountInterface
    */
   protected $currentUser;
 
   /**
-   * StockIn constructor.
+   * The purchasable entity.
+   *
+   * @var \Drupal\commerce\PurchasableEntityInterface
+   */
+  protected $purchasableEntity;
+
+  /**
+   * Constructs a new TransactionType object.
    *
    * @param array $configuration
    * @param $plugin_id
@@ -56,6 +70,26 @@ abstract class TransactionTypeBase extends PluginBase implements StockTransactio
   }
 
   /**
+   * @inheritdoc
+   */
+  public static function create(
+    ContainerInterface $container,
+    array $configuration,
+    $plugin_id,
+    $plugin_definition
+  ) {
+    $stockServiceManager = $container->get('commerce_stock.service_manager');
+
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $stockServiceManager,
+      $container->get('current_user')
+    );
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function calculateDependencies() {
@@ -72,6 +106,23 @@ abstract class TransactionTypeBase extends PluginBase implements StockTransactio
   /**
    * {@inheritdoc}
    */
+  public function getPurchasableEntity() {
+    return $this->purchasableEntity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPurchasableEntity(
+    PurchasableEntityInterface $purchasable_entity
+  ) {
+    $this->purchasableEntity = $purchasable_entity;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function setConfiguration(array $configuration) {
     $this->configuration = NestedArray::mergeDeep($this->defaultConfiguration(), $configuration);
   }
@@ -81,8 +132,7 @@ abstract class TransactionTypeBase extends PluginBase implements StockTransactio
    */
   public function defaultConfiguration() {
     return [
-      'purchasable_entity' => NULL,
-      'quantity_step' => 0.01
+      'quantity_step' => 0.01,
     ];
   }
 
@@ -93,7 +143,7 @@ abstract class TransactionTypeBase extends PluginBase implements StockTransactio
    *   The required configuration keys.
    */
   protected function requiredConfiguration() {
-    return ['purchasable_entity'];
+    return [];
   }
 
   /**
@@ -103,18 +153,7 @@ abstract class TransactionTypeBase extends PluginBase implements StockTransactio
    *   Thrown if a configuration value is invalid.
    */
   protected function validateConfiguration() {
-
-    if (empty($this->configuration['purchasable_entity'])) {
-      throw new \RuntimeException(sprintf('The "%s" plugin requires the "purchasable_entity" configuration key.', $this->pluginId));
-    }
-
     foreach ($this->requiredConfiguration() as $key) {
-      if ($key === 'purchasable_entity') {
-        if (!($this->configuration['purchasable_entity'] instanceof PurchasableEntityInterface)) {
-          throw new \RuntimeException(sprintf('The "%s" plugin requires a Drupal\commerce\PurchasableEntityInterface entity.', $this->pluginId));
-        }
-        continue;
-      }
       if (empty($this->configuration[$key])) {
         throw new \RuntimeException(sprintf('The "%s" plugin requires the "%s" configuration key', $this->pluginId, $key));
       }
@@ -136,20 +175,44 @@ abstract class TransactionTypeBase extends PluginBase implements StockTransactio
   }
 
   /**
+   * @inheritdoc
+   */
+  public function getTransactionDefaultLogMessage() {
+    $message = !empty($this->configuration['transaction_message']) ? $this->t($this->configuration['transaction_message']) : NULL;
+    if($message){
+      return $message;
+    }
+    return $this->pluginDefinition['log_message'] ? $this->pluginDefinition['log_message']->render() : NULL;
+  }
+
+  /**
    * {@inheritdoc}
+   *
+   * Parts of this proudly borrowed from
+   * @see \Drupal\commerce\Plugin\Commerce\InlineForm\InlineFormBase
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
-    $config = $this->getConfiguration();
-    $stockService = $this->stockServiceManager->getService($config['purchasable_entity']);
-    $form['locations'] = [
-      '#type' => 'value',
-      '#value' => $stockService->getStockChecker()
-        ->getLocationList(TRUE),
+    $form['#tree'] = TRUE;
+    $form['#transaction_type_form'] = $this;
+    // Workaround for core bug #2897377.
+    $form['#id'] = Html::getId('edit-' . implode('-', $form['#parents']));
+    $form['#process'][] = [CommerceElementTrait::class, 'attachElementSubmit'];
+    $form['#element_validate'][] = [
+      CommerceElementTrait::class,
+      'validateElementSubmit',
     ];
-
+    $form['#element_validate'][] = [get_class($this), 'runValidate'];
+    $form['#commerce_element_submit'][] = [get_class($this), 'runSubmit'];
     // Allow forms to modify the page title.
     $form['#process'][] = [get_class($this), 'updatePageTitle'];
+
+    $stockService = $this->stockServiceManager->getService($this->getPurchasableEntity());
+
+    $form['locations'] = [
+      '#type' => 'value',
+      '#value' => $stockService->getStockChecker()->getLocationList(TRUE),
+    ];
 
     $form['transaction_details_form'] = [
       '#tree' => TRUE,
@@ -159,6 +222,8 @@ abstract class TransactionTypeBase extends PluginBase implements StockTransactio
       '#attributes' => ['id' => 'transaction-details-wrapper'],
       '#weight' => 10,
     ];
+
+    $form['transaction_details_form']['#description'] = $this->getDescription();
 
     $form['transaction_details_form']['quantity'] = [
       '#type' => 'number',
@@ -184,13 +249,31 @@ abstract class TransactionTypeBase extends PluginBase implements StockTransactio
       '#description' => $this->t('A note for the transaction'),
       '#maxlength' => 255,
       '#size' => 64,
-      '#default_value' => '',
+      '#default_value' => $this->getTransactionDefaultLogMessage(),
       '#weight' => 50,
     ];
 
     $form['transaction_details_form']['user_id'] = [
-      '#type' => 'hidden',
+      '#type' => 'value',
       '#value' => $this->currentUser->id(),
+    ];
+
+    $form['transaction_details_form']['purchasable_entity'] = [
+      '#type' => 'value',
+      '#value' => $this->getPurchasableEntity(),
+    ];
+
+    $form['transaction_details_form']['create_transaction'] = [
+      '#type' => 'submit',
+      '#value' => t('Create transaction'),
+      '#name' => 'create_transaction',
+      '#limit_validation_errors' => [
+        $form['#parents'],
+      ],
+      '#submit' => [
+        [get_called_class(), 'createTransaction'],
+      ],
+      '#weight' => 100,
     ];
 
     return $form;
@@ -217,16 +300,64 @@ abstract class TransactionTypeBase extends PluginBase implements StockTransactio
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array $form, FormStateInterface $form_state) {
+  public function validateTransactionTypeForm(
+    array $form,
+    FormStateInterface $form_state
+  ) {
+    //Check if location is selected. If we have only one,
+    //set the target/location value.
+
+    //Check if an order is selected and ensure the selected
+    //product variation is part of the order.
+
+    //Verify that the product variation belongs to the
+    //store and the selected location.
+    xdebug_break();
   }
 
   /**
    * {@inheritdoc}
    */
-  abstract public function submitForm(
+  public function submitTransactionTypeForm(
     array $form,
     FormStateInterface $form_state
-  );
+  ) {
+    xdebug_break();
+  }
+
+  /**
+   * Runs the transaction type form validation.
+   *
+   * @param array $inline_form
+   *   The inline form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   */
+  public static function runValidate(
+    array &$form,
+    FormStateInterface $form_state
+  ) {
+    /** @var \Drupal\commerce_stock_ui\Plugin\StockTransactionTypeForm\StockTransactionTypeInterface $plugin */
+    $plugin = $form['#transaction_type_form'];
+    $plugin->validateTransactionTypeForm($form, $form_state);
+  }
+
+  /**
+   * Runs the transaction type form submission.
+   *
+   * @param array $form
+   *   The form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   */
+  public static function runSubmit(
+    array &$form,
+    FormStateInterface $form_state
+  ) {
+    /** @var \Drupal\commerce_stock_ui\Plugin\StockTransactionTypeForm\StockTransactionTypeInterface $plugin */
+    $plugin = $form['#transaction_type_form'];
+    $plugin->submitTransactionTypeForm($form, $form_state);
+  }
 
   /**
    * Updates the page title based on the form's #page_title property.
@@ -253,33 +384,6 @@ abstract class TransactionTypeBase extends PluginBase implements StockTransactio
   }
 
   /**
-   * @inheritdoc
-   */
-  public static function create(
-    ContainerInterface $container,
-    array $configuration,
-    $plugin_id,
-    $plugin_definition
-  ) {
-    $stockServiceManager = $container->get('commerce_stock.service_manager');
-
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $stockServiceManager,
-      $container->get('current_user')
-    );
-  }
-
-  /**
-   * @inheritdoc
-   */
-  public function getTransactionDefaultLogMessage() {
-    return !empty($this->configuration['log_message']) ? $this->t($this->configuration['log_message']) : NULL;
-  }
-
-  /**
    * Prepoplate data for the stock transaction for all the common stuff like
    * qty and user.
    *
@@ -293,6 +397,7 @@ abstract class TransactionTypeBase extends PluginBase implements StockTransactio
     FormStateInterface $form_state
   ) {
     $data = [];
+
     $data['source']['location'] = $form_state->hasValue([
       'transaction_details_form',
       'source',
@@ -302,6 +407,7 @@ abstract class TransactionTypeBase extends PluginBase implements StockTransactio
       'source',
       'location',
     ]) : NULL;
+
     $data['source']['zone'] = $form_state->hasValue([
       'transaction_details_form',
       'source',
@@ -311,6 +417,7 @@ abstract class TransactionTypeBase extends PluginBase implements StockTransactio
       'source',
       'zone',
     ]) : NULL;
+
     $data['target']['location'] = $form_state->hasValue([
       'transaction_details_form',
       'target',
@@ -320,6 +427,7 @@ abstract class TransactionTypeBase extends PluginBase implements StockTransactio
       'target',
       'location',
     ]) : NULL;
+
     $data['target']['zone'] = $form_state->hasValue([
       'transaction_details_form',
       'target',
@@ -333,10 +441,12 @@ abstract class TransactionTypeBase extends PluginBase implements StockTransactio
       'transaction_details_form',
       'quantity',
     ]);
+
     $data['user_id'] = $form_state->getValue([
       'transaction_details_form',
       'user_id',
     ]);
+
     $data['transaction_note'] = $form_state->hasValue([
       'transaction_details_form',
       'transaction_note',
@@ -344,46 +454,26 @@ abstract class TransactionTypeBase extends PluginBase implements StockTransactio
       'transaction_details_form',
       'transaction_note',
     ]) : '';
+
     $data['order_id'] = $form_state->hasValue([
       'transaction_details_form',
       'order',
     ]) ? $form_state->getValue([
       'transaction_details_form',
       'order',
-    ]) : null;
+    ]) : NULL;
+
     return $data;
   }
 
-  /**
-   * Create the transaction.
-   *
-   * @see \Drupal\commerce_stock\StockUpdateInterface for more information.
-   */
-  protected function createTransaction(
-    $location_id,
-    $zone,
-    $quantity,
-    $transaction_type_id,
-    $user_id,
-    $order_id = NULL,
-    array $metadata = []
-  ) {
-    $purchasableEntity = $this->configuration['purchasable_entity'];
-    /** @var \Drupal\commerce_stock\StockUpdateInterface $stockUpdater */
-    $stockUpdater = $this->stockServiceManager->getService($purchasableEntity)
-      ->getStockUpdater();
+  public static function createTransaction(array $form, FormStateInterface $form_state){
+    $triggering_element = $form_state->getTriggeringElement();
+    $parents = array_slice($triggering_element['#parents'], 0, -1);
+    $transaction_type_form = NestedArray::getValue($form, $parents);
+    // Clear the transaction quantity field.
+    $user_input = &$form_state->getUserInput();
+    NestedArray::setValue($user_input, array_merge($parents, ['qty']), 0);
 
-    return $stockUpdater->createTransaction(
-      $purchasableEntity,
-      $location_id,
-      $zone,
-      $quantity,
-      $transaction_type_id,
-      $user_id,
-      $order_id,
-      $metadata
-    );
-
+    $form_state->setRebuild();
   }
-
 }

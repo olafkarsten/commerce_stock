@@ -1,20 +1,20 @@
 <?php
 
-namespace Drupal\commerce_stock\Plugin\StockTransactionTypes;
+namespace Drupal\commerce_stock_ui\Plugin\StockTransactionTypeForm;
 
 use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Generic Stock In Transaction.
  *
- * @StockTransactionTypes(
+ * @StockTransactionTypeForm(
  *   id = "stock_in",
  *   label = @Translation("Basic stock in"),
  *   description = @Translation("Generic transaction type to add stock for an item."),
  *   log_message = @Translation("Stock added with no further details."),
  * )
  */
-class StockIn extends TransactionTypeBase {
+class StockIn extends TransactionTypeFormBase {
 
   /**
    * @inheritdoc
@@ -24,31 +24,26 @@ class StockIn extends TransactionTypeBase {
 
     $locationOptions = $this->getLocationOptions($form['locations']['#value']);
 
-    $form['transaction_details_form']['#description'] = $this->getDescription();
-
-    $form['transaction_details_form']['source'] = [
+    $form['transaction_details_form']['target'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Location'),
-      '#weight' => 20,
+      '#weight' => 30,
     ];
-
-    $form['transaction_details_form']['source']['location'] = [
+    $form['transaction_details_form']['target']['location'] = [
       '#type' => 'select',
-      '#title' => $this->t('From: Location'),
-      '#description' => $this->t('Source location for the stock transfer.'),
+      '#title' => $this->t('To: Location'),
+      '#description' => $this->t('Target location for the stock transfer.'),
       '#options' => $locationOptions,
       '#access' => count($locationOptions) > 1,
     ];
-
-    $form['transaction_details_form']['source']['zone'] = [
+    $form['transaction_details_form']['target']['zone'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('From: Zone/Bins'),
-      '#description' => $this->t('The location zone (bins) to take the stock from.'),
+      '#title' => $this->t('To: Zone/Bins'),
+      '#description' => $this->t('The location zone (bins) to move the stock to.'),
       '#size' => 60,
       '#maxlength' => 50,
     ];
 
-    $form['transaction_details_form']['transaction_note']['#default_value'] = $this->getTransactionDefaultLogMessage();
     return $form;
   }
 
