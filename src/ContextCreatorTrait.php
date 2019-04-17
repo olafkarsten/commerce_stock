@@ -18,8 +18,8 @@ trait ContextCreatorTrait {
    *
    * @return \Drupal\commerce\Context
    *   The context containing the customer & store.
-   * @throws \Exception
    *
+   * @throws \Exception
    */
   public function getContext(PurchasableEntityInterface $entity) {
     return $this->getContextDetails($entity);
@@ -37,7 +37,8 @@ trait ContextCreatorTrait {
   public function isValidContext(PurchasableEntityInterface $entity) {
     try {
       $this->getContextDetails($entity);
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e) {
       return FALSE;
     }
     return TRUE;
@@ -51,12 +52,12 @@ trait ContextCreatorTrait {
    *
    * @return \Drupal\commerce\Context
    *   The Stock service context.
+   *
    * @throws \Exception
    *   When the entity can't be purchased from the current store.
    *
    * @see \Drupal\commerce_cart\Form\AddToCartForm::selectStore()
    *   Original logic comes from this function.
-   *
    */
   private function getContextDetails(PurchasableEntityInterface $entity) {
     // Make sure the current store is in the entity stores.

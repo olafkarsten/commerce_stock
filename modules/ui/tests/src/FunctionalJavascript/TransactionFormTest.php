@@ -3,12 +3,12 @@
 namespace Drupal\Tests\commerce_stock_ui\FunctionalJavascript;
 
 use Drupal\commerce\Context;
-use Drupal\commerce_stock\Plugin\StockTransactionTypes\StockTransactionTypeInterface;
 use Drupal\commerce_stock\StockTransactionsInterface;
 use Drupal\Tests\commerce_stock_ui\Functional\StockUIBrowserTestBase;
 
 /**
  * Test the admin complex transaction form.
+ *
  * @runTestsInSeparateProcesses
  *
  * @group commerce_stock
@@ -37,7 +37,7 @@ class TransactionFormTest extends StockUIBrowserTestBase {
   protected $context;
 
   /**
-   * @var \Drupal\commerce_stock\Plugin\StockTransactionTypesManagerInterface;
+   * @var \Drupal\commerce_stock\Plugin\StockTransactionTypesManagerInterface
    */
   protected $transactionTypesManager;
 
@@ -73,13 +73,13 @@ class TransactionFormTest extends StockUIBrowserTestBase {
   }
 
   /**
-   * Test the transaction form
+   * Test the transaction form.
    */
   public function testTransactionForm() {
     $this->drupalGet('admin/commerce/config/stock/transactions');
     $this->assertSession()->buttonExists('Select variation');
     $this->assertSession()->fieldExists('product_variation');
-    $value = $this->variation->label() . ' ('.$this->variation->id() .')';
+    $value = $this->variation->label() . ' (' . $this->variation->id() . ')';
     $this->getSession()->getPage()->fillField('product_variation', $value);
     $this->assertSession()->buttonNotExists('Submit');
     $this->submitForm([], 'Select variation');
@@ -94,7 +94,7 @@ class TransactionFormTest extends StockUIBrowserTestBase {
     // Check if the transaction types select component is healthy.
     $this->transactionTypesManager->getDefinitions();
     /** @var \Drupal\commerce_stock\Plugin\StockTransactionTypes\StockTransactionTypeInterface $transactionType */
-    foreach($this->transactionTypesManager->getDefinitions() as $transactionType){
+    foreach ($this->transactionTypesManager->getDefinitions() as $transactionType) {
       $this->assertSession()->optionExists('transaction_type_selection', $transactionType['id']);
     }
     $this->assertSession()->buttonExists('Submit');

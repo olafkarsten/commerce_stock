@@ -14,7 +14,7 @@ use Drupal\Core\Form\FormStateInterface;
  *   log_message = @Translation("Stock added with no further details."),
  * )
  */
-class StockIn extends TransactionTypeFormBase {
+class StockIn extends TransactionsTypeFormBase {
 
   /**
    * @inheritdoc
@@ -57,7 +57,6 @@ class StockIn extends TransactionTypeFormBase {
     }
     return $this->pluginDefinition['log_message'] ? $this->pluginDefinition['log_message']->render() : '';
   }
-
 
   /**
    * {@inheritdoc}

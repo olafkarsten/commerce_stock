@@ -5,10 +5,10 @@ namespace Drupal\commerce_stock_test\Form;
 use Drupal\commerce_product\ProductVariationStorage;
 use Drupal\commerce_stock\Plugin\StockTransactionTypesManager;
 use Drupal\commerce_stock\StockServiceManager;
+use Drupal\commerce_stock_ui\Plugin\StockTransactionTypeFormManager;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Provides a form for testing transaction types plugins.
@@ -49,23 +49,21 @@ class TransactionTypeFormPluginTestForm extends FormBase {
   /**
    * Constructs a StockTransactions2 object.
    *
-   * @param \Drupal\commerce_product\ProductVariationStorage $productVariationStorage
+   * @param \Drupal\commerce_product\ProductVariationStorage $product_variation_storage
    *   The commerce product variation storage.
-   * @param \Drupal\commerce_stock\StockServiceManager $stockServiceManager
+   * @param \Drupal\commerce_stock\StockServiceManager $stock_service_manager
    *   The stock service manager.
-   * @param \Symfony\Component\HttpFoundation\Request $request
-   *   The current request.
-   * @param \Drupal\commerce_stock\Plugin\StockTransactionTypesManager $stock_transaction_types_manager
-   *   The transaction types manager.
+   * @param \Drupal\commerce_stock_ui\Plugin\StockTransactionTypeFormManager $stock_transaction_type_form_manager
+   *   The transaction type form manager.
    */
   public function __construct(
     ProductVariationStorage $product_variation_storage,
     StockServiceManager $stock_service_manager,
-    StockTransactionTypesManager $stock_transaction_types_manager
+    StockTransactionTypeFormManager $stock_transaction_type_form_manager
   ) {
     $this->productVariationStorage = $product_variation_storage;
     $this->stockServiceManager = $stock_service_manager;
-    $this->stockTransactionTypesManager = $stock_transaction_types_manager;
+    $this->stockTransactionTypesManager = $stock_transaction_type_form_manager;
   }
 
   /**
@@ -92,13 +90,11 @@ class TransactionTypeFormPluginTestForm extends FormBase {
    *
    * @return \Drupal\Component\Plugin\Definition\PluginDefinitionInterface[]
    *   Array of plugin definitions for transcation types keyed by plugin id.
-   *
-   * @return array|mixed[]|null
    */
   protected function getTransactionTypes() {
     $definitions = $this->stockTransactionTypesManager->getDefinitions();
     if (count($definitions) < 1) {
-      throw new \RuntimeException('No transaction types (plugins) to test.');
+      throw new \RuntimeException('No transaction type form (plugins) to test.');
     }
     return $definitions;
   }
@@ -107,13 +103,13 @@ class TransactionTypeFormPluginTestForm extends FormBase {
    * Builds an array of options to use in select elements from the provided
    * plugin definitions.
    *
-   * @param \Drupal\Component\Plugin\Definition\PluginDefinitionInterface[]
-   *   The plugin definitons
+   * @param \Drupal\Component\Plugin\Definition\PluginDefinitionInterface[] $plugin_definitions
+   *   The plugin definitons.
    *
    * @return array
    *   The options.
    */
-  protected function getOptionLabels($plugin_definitions) {
+  protected function getOptionLabels(array $plugin_definitions) {
     $options = [];
     foreach ($plugin_definitions as $plugin_id => $definition) {
       $options[$plugin_id] = $definition['label']->render();
@@ -174,7 +170,7 @@ class TransactionTypeFormPluginTestForm extends FormBase {
 
     $form['transaction_type'] = [
       '#type' => 'value',
-      '#value' => $activeTransactionType
+      '#value' => $activeTransactionType,
     ];
 
     // Get the subform for the selected transaction type.

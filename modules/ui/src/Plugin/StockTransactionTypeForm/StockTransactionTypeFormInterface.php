@@ -9,7 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 
 /**
- * Defines an interface for Stock events plugins.
+ * Defines an interface for commerce StockTransactionTypeForm plugins.
  */
 interface StockTransactionTypeFormInterface extends ConfigurablePluginInterface, PluginInspectionInterface, ContainerFactoryPluginInterface {
 
@@ -26,7 +26,7 @@ interface StockTransactionTypeFormInterface extends ConfigurablePluginInterface,
   /**
    * Gets the purchasable entity.
    *
-   * @return \Drupal\commerce\PurchasableEntityInterface $purchasable_entity
+   * @return \Drupal\commerce\PurchasableEntityInterface
    *   The purchasable entity.
    */
   public function getPurchasableEntity();
@@ -35,7 +35,7 @@ interface StockTransactionTypeFormInterface extends ConfigurablePluginInterface,
    * Gets the form label.
    *
    * @return string
-   *   The transaction type label.
+   *   The transaction type form label.
    */
   public function getLabel();
 
@@ -43,15 +43,15 @@ interface StockTransactionTypeFormInterface extends ConfigurablePluginInterface,
    * Gets the the transaction type description.
    *
    * @return string
-   *   The transaction type description.
+   *   The transaction type form description.
    */
   public function getDescription();
 
   /**
-   * Get the transaction types default log message.
+   * Get the transaction type form default log message.
    *
-   * @return string | null
-   *   The transaction type default log message or null.
+   * @return string|null
+   *   The transaction type form default log message or null.
    */
   public function getTransactionDefaultLogMessage();
 

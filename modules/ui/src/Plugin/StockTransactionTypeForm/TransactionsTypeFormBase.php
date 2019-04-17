@@ -19,7 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Provides the base class for forms.
  */
-abstract class TransactionTypeFormBase extends PluginBase implements StockTransactionTypeFormInterface, StockTransactionsInterface {
+abstract class TransactionsTypeFormBase extends PluginBase implements StockTransactionTypeFormInterface, StockTransactionsInterface {
 
   use StringTranslationTrait;
   use DependencySerializationTrait;
@@ -50,10 +50,15 @@ abstract class TransactionTypeFormBase extends PluginBase implements StockTransa
    * Constructs a new TransactionType object.
    *
    * @param array $configuration
-   * @param $plugin_id
-   * @param $plugin_definition
+   *   The configuration.
+   * @param string $plugin_id
+   *   The plugin id.
+   * @param mixed $plugin_definition
+   *   The plugin definition.
    * @param \Drupal\commerce_stock\StockServiceManagerInterface $stock_service_manager
-   * @param \Drupal\Core\Session\AccountInterface
+   *   The stock service manager.
+   * @param \Drupal\Core\Session\AccountInterface $current_user
+   *   The current user.
    */
   public function __construct(
     array $configuration,
@@ -178,17 +183,14 @@ abstract class TransactionTypeFormBase extends PluginBase implements StockTransa
    * @inheritdoc
    */
   public function getTransactionDefaultLogMessage() {
-    $message = !empty($this->configuration['transaction_message']) ? $this->t($this->configuration['transaction_message']) : NULL;
-    if($message){
-      return $message;
-    }
     return $this->pluginDefinition['log_message'] ? $this->pluginDefinition['log_message']->render() : NULL;
   }
 
   /**
    * {@inheritdoc}
    *
-   * Parts of this proudly borrowed from
+   * Parts of this proudly borrowed from.
+   *
    * @see \Drupal\commerce\Plugin\Commerce\InlineForm\InlineFormBase
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
@@ -283,10 +285,11 @@ abstract class TransactionTypeFormBase extends PluginBase implements StockTransa
    * Builds an array of options to use in forms.
    * Keyed by locationId.
    *
-   * @param array Drupal\commerce_stock_local\Entity\StockLocation[] $locations
+   * @param Drupal\commerce_stock_local\Entity\StockLocation[] $locations
+   *   The stock locations.
    *
    * @return array
-   *   the options.
+   *   The options.
    */
   protected function getLocationOptions(array $locations) {
     $options = [];
@@ -304,14 +307,12 @@ abstract class TransactionTypeFormBase extends PluginBase implements StockTransa
     array $form,
     FormStateInterface $form_state
   ) {
-    //Check if location is selected. If we have only one,
-    //set the target/location value.
-
-    //Check if an order is selected and ensure the selected
-    //product variation is part of the order.
-
-    //Verify that the product variation belongs to the
-    //store and the selected location.
+    // Check if location is selected. If we have only one,
+    // set the target/location value.
+    // Check if an order is selected and ensure the selected
+    // product variation is part of the order.
+    // Verify that the product variation belongs to the
+    // store and the selected location.
     xdebug_break();
   }
 
@@ -328,8 +329,8 @@ abstract class TransactionTypeFormBase extends PluginBase implements StockTransa
   /**
    * Runs the transaction type form validation.
    *
-   * @param array $inline_form
-   *   The inline form.
+   * @param array $form
+   *   The form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
    */
@@ -385,7 +386,7 @@ abstract class TransactionTypeFormBase extends PluginBase implements StockTransa
 
   /**
    * Prepoplate data for the stock transaction for all the common stuff like
-   * qty and user.
+   * quantity and user.
    *
    * @param array $form
    *   The form.
@@ -466,7 +467,15 @@ abstract class TransactionTypeFormBase extends PluginBase implements StockTransa
     return $data;
   }
 
-  public static function createTransaction(array $form, FormStateInterface $form_state){
+  /**
+   * Creates a transaction.
+   *
+   * @param array $form
+   *   The form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  public static function createTransaction(array $form, FormStateInterface $form_state) {
     $triggering_element = $form_state->getTriggeringElement();
     $parents = array_slice($triggering_element['#parents'], 0, -1);
     $transaction_type_form = NestedArray::getValue($form, $parents);
@@ -476,4 +485,5 @@ abstract class TransactionTypeFormBase extends PluginBase implements StockTransa
 
     $form_state->setRebuild();
   }
+
 }

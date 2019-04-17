@@ -50,14 +50,14 @@ class StockTransactionForm extends FormBase {
   /**
    * Constructs a StockTransactions2 object.
    *
-   * @param \Drupal\commerce_product\ProductVariationStorage $productVariationStorage
+   * @param \Drupal\commerce_product\ProductVariationStorage $product_variation_storage
    *   The commerce product variation storage.
-   * @param \Drupal\commerce_stock\StockServiceManager $stockServiceManager
+   * @param \Drupal\commerce_stock\StockServiceManager $stock_service_manager
    *   The stock service manager.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current request.
-   * @param  Drupal\Component\Plugin\PluginManagerInterface $stock_transaction_type_form_manager
-   *   The transaction types manager.
+   * @param Drupal\Component\Plugin\PluginManagerInterface $stock_transaction_type_form_manager
+   *   The transaction type form manager.
    */
   public function __construct(
     ProductVariationStorage $product_variation_storage,
@@ -92,17 +92,15 @@ class StockTransactionForm extends FormBase {
   }
 
   /**
-   * Get all transaction type plugin definitions.
+   * Get all transaction form type plugin definitions.
    *
    * @return \Drupal\Component\Plugin\Definition\PluginDefinitionInterface[]
-   *   Array of plugin definitions for transcation types keyed by plugin id.
-   *
-   * @return array|mixed[]|null
+   *   Plugin definitions for transcation type formes keyed by plugin id.
    */
   protected function getTransactionTypes() {
     $definitions = $this->stockTransactionTypeFormManager->getDefinitions();
     if (count($definitions) < 1) {
-      throw new \RuntimeException('You need to define transaction types (plugins) to use this form.');
+      throw new \RuntimeException('You need to define transaction type form plugins to use this form.');
     }
     return $definitions;
   }
@@ -111,13 +109,13 @@ class StockTransactionForm extends FormBase {
    * Builds an array of options to use in select elements from the provided
    * plugin definitions.
    *
-   * @param \Drupal\Component\Plugin\Definition\PluginDefinitionInterface[]
-   *   The plugin definitons
+   * @param \Drupal\Component\Plugin\Definition\PluginDefinitionInterface[] $plugin_definitions
+   *   The plugin definitions.
    *
    * @return array
    *   The options.
    */
-  protected function getOptionLabels($plugin_definitions) {
+  protected function getOptionLabels(array $plugin_definitions) {
     $options = [];
     foreach ($plugin_definitions as $plugin_id => $definition) {
       $options[$plugin_id] = $definition['label']->render();
@@ -196,9 +194,9 @@ class StockTransactionForm extends FormBase {
       );
 
     $form['stock_transaction_form']['transaction_type_detail_form'] = [
-        '#transaction_type_form' => $activeTransactionType,
-        '#attributes' =>  ['#id' => 'transaction-details-wrapper'],
-        '#parents' => ['stock_transaction_form', 'transaction_type_detail_form'],
+      '#transaction_type_form' => $activeTransactionType,
+      '#attributes' => ['#id' => 'transaction-details-wrapper'],
+      '#parents' => ['stock_transaction_form', 'transaction_type_detail_form'],
     ];
 
     // Get the subform for the selected transaction type.
@@ -255,7 +253,7 @@ class StockTransactionForm extends FormBase {
     array $form,
     FormStateInterface $form_state
   ) {
-    return  $form['stock_transaction_form']['transaction_type_detail_form'];
+    return $form['stock_transaction_form']['transaction_type_detail_form'];
   }
 
   /**

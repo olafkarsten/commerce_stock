@@ -2,10 +2,8 @@
 
 namespace Drupal\commerce_stock_ui;
 
-
-use Drupal\commerce_stock\Plugin\StockTransactionTypes;
 /**
- * Test transaction type
+ * Test transaction type.
  *
  * @StockTransactionTypeForm(
  *   id = "test_transaction_type_form",

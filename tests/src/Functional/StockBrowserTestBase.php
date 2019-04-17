@@ -97,7 +97,7 @@ abstract class StockBrowserTestBase extends WebDriverTestBase {
 
     $location = StockLocation::create([
       'type' => 'default',
-      'name' => 'TESTLOCATION'
+      'name' => 'TESTLOCATION',
     ]);
     $location->save();
 

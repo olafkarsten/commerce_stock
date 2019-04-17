@@ -5,7 +5,7 @@ namespace Drupal\commerce_stock;
 use Drupal\commerce\PurchasableEntityInterface;
 
 /**
- * Defines a common interface for generic stock in transactions.
+ * Defines a common interface for a generic transaction that adds stock.
  */
 interface StockInInterface {
 
@@ -30,13 +30,29 @@ interface StockInInterface {
    *   was not triggered by an order.
    * @param string|null $transaction_note
    *   The transaction note or NULL.
-   * @param array $metadata
-   *   Holds all the optional values those are:
-   *     - related_tid: the related transaction id. (int)
-   *     - unit_cost: the unit cost (float)
-   *     - currency: the currency of the unit cost (string)
-   *     - data: array of arbitrary data.
+   * @param float $unit_cost
+   *   The unit cost.
+   * @param string $currency_code
+   *   The currency code.
+   * @param string|int|null $related_tid
+   *   Transaction id of a related transaction e.g. in case of transfering
+   *   stock from one bin to another.
+   * @param array $data
+   *   Amy arbitrary transaction related data.
    */
-  public function addStock(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $user_id, $order_id = NULL, $unit_cost, $currency_code, $transaction_note = NULL, array $metadata = []);
+  public function addStock(
+    PurchasableEntityInterface $entity,
+    $location_id,
+    $zone,
+    $quantity,
+    $transaction_type_id,
+    $user_id,
+    $order_id = NULL,
+    $transaction_note = NULL,
+    $unit_cost = NULL,
+    $currency_code = NULL,
+    $related_tid = NULL,
+    array $data = []
+  );
 
 }

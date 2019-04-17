@@ -19,6 +19,8 @@ class StockTransactionTypeFormManager extends DefaultPluginManager {
   /**
    * Provides default values for all stock transaction type plugins.
    *
+   * @var array
+   *
    * @see \Drupal\commerce_stock_ui\Annotation\StockTransactionTypeForm
    * @see plugin_api
    */

@@ -26,6 +26,9 @@ class StockReturn extends StockIn {
     return $form;
   }
 
+  /**
+   * @inheritDoc
+   */
   public function validateForm(array $form, FormStateInterface $form_state) {
     // TODO: Validate the stock return quantity against the order, if we have one.
     parent::validateForm($form, $form_state);
@@ -49,7 +52,8 @@ class StockReturn extends StockIn {
         $order_id,
         $metadata
       );
-    } catch (\Exception $e){
+    }
+    catch (\Exception $e) {
 
     }
 

@@ -14,7 +14,7 @@ use Drupal\Core\Form\FormStateInterface;
  *   log_message = @Translation("Stock removed with no further details."),
  * )
  */
-class StockOut extends TransactionTypeFormBase {
+class StockOut extends TransactionsTypeFormBase {
 
   /**
    * @inheritdoc

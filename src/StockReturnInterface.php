@@ -20,17 +20,30 @@ interface StockReturnInterface {
    *   The zone.
    * @param float $quantity
    *   The quantity.
-   * @param float $unit_cost
-   *   The unit cost.
-   * @param string $currency_code
-   *   The currency code.
    * @param int $user_id
    *   The user ID.
-   * @param int|null $order_id
-   *   The order ID.
+   * @param int $order_id
+   *   The order ID or NULL.
+   * @param float|null $unit_cost
+   *   The unit cost or NULL.
+   * @param string|null $currency_code
+   *   The currency code or NULL.
    * @param string|null $transaction_note
    *   The transaction note or NULL.
+   * @param array $data
+   *   Any arbitrary transaction related data.
    */
-  public function returnStock(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $unit_cost, $currency_code, $user_id, $order_id = NULL, $transaction_note = NULL);
+  public function returnStock(
+    PurchasableEntityInterface $entity,
+    $location_id,
+    $zone,
+    $quantity,
+    $user_id,
+    $order_id = NULL,
+    $unit_cost = NULL,
+    $currency_code = NULL,
+    $transaction_note = NULL,
+    array $data = []
+  );
 
 }

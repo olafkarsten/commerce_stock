@@ -13,7 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
  *   description = @Translation("Use this one to move stock between different locations and/or zones."),
  * )
  */
-class StockMove extends TransactionTypeFormBase {
+class StockMove extends TransactionsTypeFormBase {
 
   /**
    * @inheritdoc

@@ -46,7 +46,7 @@ interface StockUpdateInterface {
     $transaction_type_id,
     $user_id,
     $order_id = NULL,
-    array $metadata
+    array $metadata = []
   );
 
 }
