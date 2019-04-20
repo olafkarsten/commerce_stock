@@ -8,13 +8,14 @@ use Drupal\commerce_product\Entity\ProductVariationType;
 use Drupal\commerce_stock_local\Entity\StockLocation;
 use Drupal\commerce_store\StoreCreationTrait;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\commerce\Traits\CommerceBrowserTestTrait;
 use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
 
 /**
  * Defines base class for commerce stock test cases.
  */
-abstract class StockBrowserTestBase extends WebDriverTestBase {
+abstract class StockBrowserTestBase extends BrowserTestBase {
 
   use EntityReferenceTestTrait;
   use StoreCreationTrait;
@@ -26,13 +27,18 @@ abstract class StockBrowserTestBase extends WebDriverTestBase {
    * @var array
    */
   public static $modules = [
+    'system',
+    'field',
+    'block',
+    'commerce',
+    'commerce_price',
     'commerce_store',
     'commerce_product',
     'commerce_order',
     'commerce_stock',
     'field_ui',
     'options',
-    'taxonomy',
+    'taxonomy'
   ];
 
   /**
@@ -67,7 +73,13 @@ abstract class StockBrowserTestBase extends WebDriverTestBase {
    * {@inheritdoc}
    */
   protected function getAdministratorPermissions() {
-    return [
+    return array_merge([
+      'administer commerce_product',
+      'administer commerce_product_type',
+      'administer commerce_product fields',
+      'administer commerce_product_variation fields',
+      'administer commerce_product_variation display',
+      'access commerce_product overview',
       'view the administration theme',
       'access administration pages',
       'access commerce administration pages',
@@ -75,13 +87,7 @@ abstract class StockBrowserTestBase extends WebDriverTestBase {
       'administer commerce_store',
       'administer commerce_store_type',
       'administer commerce_order',
-      'administer commerce_product',
-      'administer commerce_product_type',
-      'administer commerce_product fields',
-      'administer commerce_product_variation fields',
-      'administer commerce_product_variation display',
-      'access commerce_product overview',
-    ];
+    ],[]);
   }
 
   /**
@@ -90,10 +96,15 @@ abstract class StockBrowserTestBase extends WebDriverTestBase {
   protected function setUp() {
     parent::setUp();
 
-    $this->adminUser = $this->drupalCreateUser($this->getAdministratorPermissions());
     $this->stockServiceManager = $this->container->get('commerce_stock.service_manager');
 
     $this->store = $this->createStore();
+    $this->placeBlock('local_tasks_block');
+    $this->placeBlock('local_actions_block');
+    $this->placeBlock('page_title_block');
+
+    $this->adminUser = $this->drupalCreateUser($this->getAdministratorPermissions());
+    $this->drupalLogin($this->adminUser);
 
     $location = StockLocation::create([
       'type' => 'default',

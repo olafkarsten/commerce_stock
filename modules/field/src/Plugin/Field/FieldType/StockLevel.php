@@ -158,7 +158,9 @@ class StockLevel extends FieldItemBase {
       $transaction_type = ($transaction_qty > 0) ? StockTransactionsInterface::STOCK_IN : StockTransactionsInterface::STOCK_OUT;
       // @todo Add zone and location to form.
       /** @var \Drupal\commerce_stock\StockLocationInterface $location */
-      $location = $stockServiceManager->getService($entity)->getConfiguration()->getTransactionLocation($this->getContext($entity), $entity, $transaction_qty);
+      $location = $stockServiceManager->getService($entity)
+        ->getConfiguration()
+        ->getTransactionLocation($this->getContext($entity), $entity, $transaction_qty);
       if (empty($location)) {
         // If we have no location, something isn't properly configured.
         throw new \RuntimeException('The StockServiceManager didn\'t return a location. Make sure your store is set up correctly?');
@@ -171,14 +173,19 @@ class StockLevel extends FieldItemBase {
       };
       $currency_code = empty($values['unit_cost']['currency_code']) ? NULL : $values['unit_cost']['currency_code'];
       $transaction_note = empty($values['stock_transaction_note']) ? '' : $values['stock_transaction_note'];
-      $metadata = ['data' => ['message' => $transaction_note]];
+      $data = ['message' => $transaction_note];
       if (!empty($values['user_id'])) {
-        $metadata['related_uid'] = $values['user_id'];
+        $user_id = $values['user_id'];
       }
       else {
-        $metadata['related_uid'] = \Drupal::currentUser()->id();
+        $user_id = \Drupal::currentUser()->id();
       }
-      $stockServiceManager->createTransaction($entity, $location->getId(), $zone, $transaction_qty, (float) $unit_cost, $currency_code, $transaction_type, $metadata);
+      $order_id = !empty($values['order_id']) ? $values['order_id'] : NULL;
+      $related_tid = !empty($values['related_tid']) ? $values['related_tid'] : NULL;
+      $stockServiceManager->getService($entity)
+        ->getStockUpdater()
+        ->createTransaction($entity, $location->getId(), $zone, $transaction_qty, $transaction_type, $user_id, $order_id, $related_tid, (float) $unit_cost, $currency_code, $data);
+
     }
   }
 

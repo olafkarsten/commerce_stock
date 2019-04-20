@@ -69,6 +69,7 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
     $variation_sku = $this->randomMachineName();
     $this->getSession()->getPage()->fillField('sku[0][value]', $variation_sku);
     $this->getSession()->getPage()->fillField('price[0][number]', '9.99');
+    $this->getSession()->getPage()->fillField('title[0][value]', $this->randomString());
     $adjustment = 2;
     $this->getSession()
       ->getPage()
@@ -185,6 +186,7 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
     $sku = strtolower($this->randomMachineName());
     $edit = [
       'title[0][value]' => $title,
+      'variations[entity][title][0][value]' => $title,
       'stores[target_id][value][' . $store_id . ']' => $store_id,
       'variations[entity][sku][0][value]' => $sku,
       'variations[entity][price][0][number]' => '99.99',
@@ -212,7 +214,7 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
       ->fieldValueEquals('variations[entity][' . $this->fieldName . '][0][stock_transaction_note]', $default_note);
     $adjustment = 6;
     $edit = [
-      'title[0][value]' => 'New title',
+      'variations[entity][title][0][value]' => 'New title',
       'variations[entity][price][0][number]' => '199.99',
       'variations[entity][' . $this->fieldName . '][0][adjustment]' => $adjustment,
     ];
@@ -331,7 +333,7 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
     $data = unserialize($transaction->data);
     $this->assertEquals(-10, $transaction->qty);
     $this->assertEquals($this->adminUser->id(), $transaction->related_uid);
-    $this->assertTrue('CustumNote', $data['message']);
+    $this->assertTrue('CustomNote', $data['message']);
 
     // Testing that zero value, results in a transaction.
     $this->drupalGet($this->variation->toUrl('edit-form'));
@@ -384,6 +386,7 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
     $sku = strtolower($this->randomMachineName());
     $edit = [
       'title[0][value]' => $title,
+      'variations[entity][title][0][value]' => $title,
       'stores[target_id][value][' . $store_id . ']' => $store_id,
       'variations[entity][sku][0][value]' => $sku,
       'variations[entity][price][0][number]' => '99.99',
@@ -411,7 +414,7 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
       ->fieldValueEquals('variations[entity][' . $this->fieldName . '][0][stock_transaction_note]', $default_note);
     $stock_level = 15;
     $edit = [
-      'title[0][value]' => 'New title',
+      'variations[entity][title][0][value]' => 'New title',
       'variations[entity][price][0][number]' => '199.99',
       'variations[entity][' . $this->fieldName . '][0][stock_level]' => $stock_level,
     ];
@@ -451,11 +454,12 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
 
     $this->configureFormDisplay($widget_id, $widget_settings, $entity_type, $bundle);
     $this->drupalGet($this->variation->toUrl('edit-form'));
+
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->linkExists(t('transaction form'));
     $this->clickLink(t('transaction form'));
     $this->assertSession()->statusCodeEquals(200);
-    $path = '/admin/commerce/config/stock/transactions2';
+    $path = '/admin/commerce/config/stock/transactions';
     $this->assertSession()->addressEquals($path);
   }
 

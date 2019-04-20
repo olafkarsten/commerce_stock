@@ -22,7 +22,15 @@ class CoreStockEvents extends PluginBase implements StockEventsInterface {
   /**
    * {@inheritdoc}
    */
-  public function stockEvent(Context $context, PurchasableEntityInterface $entity, $stockEvent, $quantity, StockLocationInterface $location, $transaction_type, array $metadata) {
+  public function stockEvent(
+    Context $context,
+    PurchasableEntityInterface $entity,
+    $stockEvent,
+    $quantity,
+    StockLocationInterface $location,
+    $transaction_type,
+    array $metadata
+  ) {
 
     $config = \Drupal::configFactory()->get('commerce_stock.core_stock_events');
 
@@ -53,7 +61,8 @@ class CoreStockEvents extends PluginBase implements StockEventsInterface {
       ->getService($entity);
     // Use the stock updater to create the transaction.
     $transaction_id = $stockService->getStockUpdater()
-      ->createTransaction($entity, $location->getId(), '', $quantity, NULL, $currency_code = NULL, $transaction_type, $metadata);
+      ->createTransaction($entity, $location->getId(), '', $quantity, $transaction_type, $context->getCustomer()
+        ->id(), NULL, NULL, $currency_code = NULL, $metadata);
     // Return the transaction ID.
     return $transaction_id;
   }
@@ -86,7 +95,10 @@ class CoreStockEvents extends PluginBase implements StockEventsInterface {
   /**
    * {@inheritdoc}
    */
-  public function saveConfigFormOptions(array $form, FormStateInterface $form_state) {
+  public function saveConfigFormOptions(
+    array $form,
+    FormStateInterface $form_state
+  ) {
     $values = $form_state->getValues();
     $config = \Drupal::configFactory()
       ->getEditable('commerce_stock.core_stock_events');

@@ -28,6 +28,7 @@ abstract class StockLevelFieldTestBase extends StockBrowserTestBase {
    */
   public static $modules = [
     'commerce_stock_field',
+    'commerce_stock_ui',
     'commerce_stock_local',
   ];
 
@@ -48,8 +49,6 @@ abstract class StockLevelFieldTestBase extends StockBrowserTestBase {
     $bundle = 'default';
     $this->fieldName = 'stock_level_test';
 
-    $this->drupalLogin($this->adminUser);
-
     $config = \Drupal::configFactory()
       ->getEditable('commerce_stock.service_manager');
     $config->set('default_service_id', 'local_stock');
@@ -69,8 +68,10 @@ abstract class StockLevelFieldTestBase extends StockBrowserTestBase {
     $store = array_shift($this->stores);
     $context = new Context($this->adminUser, $store);
     $this->locations = $stockServiceConfiguration->getAvailabilityLocations($context, $this->variation);
-    $this->stockServiceManager->createTransaction($this->variation, $this->locations[1]->getId(), '', 10, 10.10, 'USD', StockTransactionsInterface::STOCK_IN, []);
-    self::assertTrue($this->stockServiceManager->getStockLevel($this->variation) == 10);
+    $this->stockServiceManager->getService($this->variation)
+      ->getStockUpdater()
+      ->createTransaction($this->variation, $this->locations[1]->getId(), '', 10, StockTransactionsInterface::STOCK_IN,$this->adminUser->id(),1234,null, 10.10, 'USD', []);
+    self::assertTrue($this->stockServiceManager->getService($this->variation)->getStockChecker()->getTotalStockLevel($this->variation, $this->locations) == 10);
   }
 
 }

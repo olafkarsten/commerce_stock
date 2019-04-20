@@ -61,7 +61,7 @@ class TransactionFormLinkWidget extends WidgetBase {
     $level = $field->available_stock;
     $link = Link::createFromRoute(
       $this->t('transaction form'),
-      'commerce_stock_ui.stock_transactions2',
+      'commerce_stock_ui.stock_transactions',
       ['commerce_product_v_id' => $entity->id()]
     )->toString();
     $element['stock_level'] = [

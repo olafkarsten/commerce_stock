@@ -80,9 +80,6 @@ class OrderEventSubscriber implements EventSubscriberInterface {
         $location = $service->getConfiguration()->getTransactionLocation($context, $entity, $quantity);
         $transaction_type = StockTransactionsInterface::STOCK_SALE;
         $metadata = [
-          'related_oid' => $order->id(),
-          'related_uid' => $order->getCustomerId(),
-          'data' => ['message' => 'order placed'],
         ];
 
         $this->runTransactionEvent(StockEventsInterface::ORDER_PLACE_EVENT, $context,

@@ -67,7 +67,7 @@ class TransactionFormTest extends StockUIBrowserTestBase {
     $this->context = new Context($this->adminUser, $this->store);
     $locations = $stockConfig->getAvailabilityLocations($this->context, $this->variation);
 
-    $this->stockUpdater->createTransaction($this->variation, $locations[1]->getId(), '', 10, 10.10, 'USD', StockTransactionsInterface::STOCK_IN, []);
+    $this->stockUpdater->createTransaction($this->variation, $locations[1]->getId(), '', 10, StockTransactionsInterface::STOCK_IN,$this->adminUser->id(),NULL,NULL, 10.10, 'USD', []);
 
     self::assertTrue($stockChecker->getTotalStockLevel($this->variation, $locations) == 10);
   }

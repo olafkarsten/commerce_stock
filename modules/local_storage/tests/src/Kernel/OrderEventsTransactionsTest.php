@@ -203,8 +203,8 @@ class OrderEventsTransactionsTest extends CommerceStockKernelTestBase {
     $this->locations2 = $stockServiceConfiguration2->getAvailabilityLocations($context, $this->variation2);
 
     // Set initial Stock level.
-    $stockServiceManager->createTransaction($this->variation, $this->locations[1]->getId(), '', 10, 10.10, 'USD', StockTransactionsInterface::STOCK_IN, []);
-    $stockServiceManager->createTransaction($this->variation2, $this->locations2[1]->getId(), '', 11, 11.11, 'USD', StockTransactionsInterface::STOCK_IN, []);
+    $stockServiceManager->getService($this->variation)->getStockUpdater()->createTransaction($this->variation, $this->locations[1]->getId(), '', 10, StockTransactionsInterface::STOCK_IN, $this->user->id(), NULL, NULL, 10.10, 'USD', []);
+    $stockServiceManager->getService($this->variation2)->getStockUpdater()->createTransaction($this->variation2, $this->locations2[1]->getId(), '', 11,StockTransactionsInterface::STOCK_IN, $this->user->id(), NULL, NULL, 11.11, 'USD', []);
 
     $profile = Profile::create([
       'type' => 'customer',
@@ -232,8 +232,8 @@ class OrderEventsTransactionsTest extends CommerceStockKernelTestBase {
       ->getStorage('commerce_order_item');
 
     $order_item2 = OrderItem::create([
-      'type'       => 'default',
-      'quantity'   => 2,
+      'type' => 'default',
+      'quantity' => 2,
       'unit_price' => new Price('12.00', 'USD'),
     ]);
     $order_item2->save();

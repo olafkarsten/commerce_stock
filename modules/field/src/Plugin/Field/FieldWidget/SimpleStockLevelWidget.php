@@ -212,7 +212,7 @@ class SimpleStockLevelWidget extends WidgetBase implements ContainerFactoryPlugi
         ];
         $link = Link::createFromRoute(
           $this->t('New transaction'),
-          'commerce_stock_ui.stock_transactions2',
+          'commerce_stock_ui.stock_transactions',
           ['commerce_product_v_id' => $entity->id()],
           ['attributes' => ['target' => '_blank']]
         )->toString();
@@ -280,7 +280,10 @@ class SimpleStockLevelWidget extends WidgetBase implements ContainerFactoryPlugi
         return $values;
       }
       $new_level = $values[0]['stock_level'];
-      $current_level = $this->stockServiceManager->getStockLevel($values[0]['stocked_entity']);
+      $purchasable_entity = $values[0]['stocked_entity'];
+      $stockService = $this->stockServiceManager->getService($purchasable_entity);
+      $locations = $stockService->getConfiguration()->getAvailabilityLocations($this->getContext($purchasable_entity), $purchasable_entity);
+      $current_level = $stockService->getStockChecker()->getTotalStockLevel($purchasable_entity, $locations);
       $values[0]['adjustment'] = $new_level - $current_level;
       return $values;
     }
