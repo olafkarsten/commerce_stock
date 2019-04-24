@@ -35,7 +35,10 @@ class LocalStockUpdater implements StockUpdateInterface {
    * @param \Drupal\commerce_stock\StockCheckInterface $checker
    *   The local stock checker.
    */
-  public function __construct(Connection $database, StockCheckInterface $checker) {
+  public function __construct(
+    Connection $database,
+    StockCheckInterface $checker
+  ) {
     $this->database = $database;
     $this->checker = $checker;
   }
@@ -58,12 +61,19 @@ class LocalStockUpdater implements StockUpdateInterface {
   /**
    * {@inheritdoc}
    */
-  public function createTransaction(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $unit_cost, $currency_code, $transaction_type_id, array $metadata) {
-    // Get optional fields.
-    $related_tid = isset($metadata['related_tid']) ? $metadata['related_tid'] : NULL;
-    $related_oid = isset($metadata['related_oid']) ? $metadata['related_oid'] : NULL;
-    $related_uid = isset($metadata['related_uid']) ? $metadata['related_uid'] : NULL;
-    $data = isset($metadata['data']) ? $metadata['data'] : NULL;
+  public function createTransaction(
+    PurchasableEntityInterface $entity,
+    $location_id,
+    $zone,
+    $quantity,
+    $transaction_type_id,
+    $user_id,
+    $order_id = NULL,
+    $related_tid = NULL,
+    $unit_cost = NULL,
+    $currency_code = NULL,
+    array $data = []
+  ) {
 
     // Create a record.
     $field_values = [
@@ -77,8 +87,8 @@ class LocalStockUpdater implements StockUpdateInterface {
       'transaction_time' => time(),
       'transaction_type_id' => $transaction_type_id,
       'related_tid' => $related_tid,
-      'related_oid' => $related_oid,
-      'related_uid' => $related_uid,
+      'related_oid' => $order_id,
+      'related_uid' => $user_id,
       'data' => serialize($data),
     ];
 
@@ -97,7 +107,10 @@ class LocalStockUpdater implements StockUpdateInterface {
    * @param \Drupal\commerce\PurchasableEntityInterface $entity
    *   The purchasable entity.
    */
-  public function updateLocationStockLevel($location_id, PurchasableEntityInterface $entity) {
+  public function updateLocationStockLevel(
+    $location_id,
+    PurchasableEntityInterface $entity
+  ) {
     $current_level = $this->checker->getLocationStockLevel($location_id, $entity);
     $last_update = $current_level['last_transaction'];
     $latest_txn = $this->checker->getLocationStockTransactionLatest($location_id, $entity);
@@ -123,7 +136,12 @@ class LocalStockUpdater implements StockUpdateInterface {
    * @param int $last_txn
    *   The last transaction id.
    */
-  public function setLocationStockLevel($location_id, PurchasableEntityInterface $entity, $qty, $last_txn) {
+  public function setLocationStockLevel(
+    $location_id,
+    PurchasableEntityInterface $entity,
+    $qty,
+    $last_txn
+  ) {
     $existing = $this->database->select('commerce_stock_location_level', 'll')
       ->fields('ll')
       ->condition('location_id', $location_id)
@@ -143,8 +161,20 @@ class LocalStockUpdater implements StockUpdateInterface {
     }
     else {
       $this->database->insert('commerce_stock_location_level')
-        ->fields(['location_id', 'entity_id', 'entity_type', 'qty', 'last_transaction_id'])
-        ->values([$location_id, $entity->id(), $entity->getEntityTypeId(), $qty, $last_txn])
+        ->fields([
+          'location_id',
+          'entity_id',
+          'entity_type',
+          'qty',
+          'last_transaction_id',
+        ])
+        ->values([
+          $location_id,
+          $entity->id(),
+          $entity->getEntityTypeId(),
+          $qty,
+          $last_txn,
+        ])
         ->execute();
     }
   }

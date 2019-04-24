@@ -173,18 +173,18 @@ class StockLevel extends FieldItemBase {
       };
       $currency_code = empty($values['unit_cost']['currency_code']) ? NULL : $values['unit_cost']['currency_code'];
       $transaction_note = empty($values['stock_transaction_note']) ? '' : $values['stock_transaction_note'];
-      $metadata = ['data' => ['message' => $transaction_note]];
+      $data = ['message' => $transaction_note];
       if (!empty($values['user_id'])) {
-        $metadata['related_uid'] = $values['user_id'];
+        $user_id = $values['user_id'];
       }
       else {
-        $metadata['related_uid'] = \Drupal::currentUser()->id();
+        $user_id = \Drupal::currentUser()->id();
       }
       $order_id = !empty($values['order_id']) ? $values['order_id'] : NULL;
       $related_tid = !empty($values['related_tid']) ? $values['related_tid'] : NULL;
       $stockServiceManager->getService($entity)
         ->getStockUpdater()
-        ->createTransaction($entity, $location->getId(), $zone, $transaction_qty, $transaction_type, $user_id, $order_id, $related_tid, (float) $unit_cost, $currency_code, $metadata);
+        ->createTransaction($entity, $location->getId(), $zone, $transaction_qty, $transaction_type, $user_id, $order_id, $related_tid, (float) $unit_cost, $currency_code, $data);
 
     }
   }
