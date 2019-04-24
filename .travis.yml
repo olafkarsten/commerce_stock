@@ -123,15 +123,15 @@ before_install:
 
 install:
   - drupal-ti install
-    -
-    # Install Chromedriver.
-    - mkdir travis-chromedriver
-    - CHROMEDRIVER_VERSION=$(wget http://chromedriver.storage.googleapis.com/LATEST_RELEASE -qO-)
-    - wget http://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
-    - unzip chromedriver_linux64.zip -d travis-chromedriver && rm -f chromedriver_linux64.zip
-    - chmod a+x travis-chromedriver/chromedriver
-    - export PATH=$PWD/travis-chromedriver:$PATH
-    - chromedriver --version
+
+  # Install Chromedriver.
+  - mkdir travis-chromedriver
+  - CHROMEDRIVER_VERSION=$(wget http://chromedriver.storage.googleapis.com/LATEST_RELEASE -qO-)
+  - wget http://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
+  - unzip chromedriver_linux64.zip -d travis-chromedriver && rm -f chromedriver_linux64.zip
+  - chmod a+x travis-chromedriver/chromedriver
+  - export PATH=$PWD/travis-chromedriver:$PATH
+  - chromedriver --version
 
   # Installed after Drush to prevent Composer conflicts around symfony/yaml.
   - composer global require "drupal/coder:8.3.*"
