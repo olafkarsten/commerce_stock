@@ -29,7 +29,8 @@ class CoreStockEvents extends PluginBase implements StockEventsInterface {
     $quantity,
     StockLocationInterface $location,
     $transaction_type,
-    array $metadata
+    $orderId = NULL,
+    array $metadata = []
   ) {
 
     $config = \Drupal::configFactory()->get('commerce_stock.core_stock_events');
@@ -57,12 +58,16 @@ class CoreStockEvents extends PluginBase implements StockEventsInterface {
     }
 
     // Get the stock service.
-    $stockService = \Drupal::service('commerce_stock.service_manager')
+    $stock_service = \Drupal::service('commerce_stock.service_manager')
       ->getService($entity);
     // Use the stock updater to create the transaction.
-    $transaction_id = $stockService->getStockUpdater()
-      ->createTransaction($entity, $location->getId(), '', $quantity, $transaction_type, $context->getCustomer()
-        ->id(), NULL, NULL, $currency_code = NULL, $metadata);
+    $related_transaction = empty($metadata['related_tid']) ? NULL : $metadata['related_tid'];
+    $unit_cost = empty($metadata['unit_cost']) ? NULL : $metadata['unit_cost'];
+    $unit_cost_currency = empty($metadata['currency']) ? NULL : $metadata['currency'];
+    $transaction_id = $stock_service->getStockUpdater()
+      ->createTransaction(
+        $entity, $location->getId(), '', $quantity, $transaction_type, $context->getCustomer()
+          ->id(), $orderId, $related_transaction, $unit_cost, $unit_cost_currency, $metadata);
     // Return the transaction ID.
     return $transaction_id;
   }

@@ -4,6 +4,7 @@ namespace Drupal\commerce_stock;
 
 use Drupal\commerce\Context;
 use Drupal\commerce\PurchasableEntityInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
 
 /**
  * Provides trait to create a commerce context object from a purchasable entity.
@@ -82,6 +83,23 @@ trait ContextCreatorTrait {
     $currentUser = \Drupal::currentUser();
 
     return new Context($currentUser, $store);
+  }
+
+  /**
+   * Creates a commerce context objext.
+   *
+   * @param \Drupal\commerce_order\Entity\OrderInterface $order
+   *   The commerce order obejct.
+   * @param int|null $time
+   *   The unix timestamp, or NULL to use the current time.
+   * @param array $data
+   *   The data.
+   *
+   * @return \Drupal\commerce\Context
+   *   The context.
+   */
+  public static function createContextFromOrder(OrderInterface $order, $time = NULL, array $data = []) {
+    return new Context($order->getCustomer(), $order->getStore(), $time, $data);
   }
 
 }

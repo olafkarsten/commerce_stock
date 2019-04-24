@@ -70,7 +70,7 @@ abstract class StockLevelFieldTestBase extends StockBrowserTestBase {
     $this->locations = $stockServiceConfiguration->getAvailabilityLocations($context, $this->variation);
     $this->stockServiceManager->getService($this->variation)
       ->getStockUpdater()
-      ->createTransaction($this->variation, $this->locations[1]->getId(), '', 10, StockTransactionsInterface::STOCK_IN,$this->adminUser->id(),1234,null, 10.10, 'USD', []);
+      ->createTransaction($this->variation, $this->locations[1]->getId(), '', 10, StockTransactionsInterface::STOCK_IN, $this->adminUser->id(), 1234, NULL, 10.10, 'USD', []);
     self::assertTrue($this->stockServiceManager->getService($this->variation)->getStockChecker()->getTotalStockLevel($this->variation, $this->locations) == 10);
   }
 

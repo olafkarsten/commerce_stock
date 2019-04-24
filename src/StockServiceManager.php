@@ -111,4 +111,5 @@ class StockServiceManager implements StockServiceManagerInterface {
 
     return $ids;
   }
+
 }

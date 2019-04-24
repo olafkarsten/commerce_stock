@@ -4,7 +4,7 @@ namespace Drupal\Tests\commerce_stock_ui\FunctionalJavascript;
 
 use Drupal\commerce\Context;
 use Drupal\commerce_stock\StockTransactionsInterface;
-use Drupal\Tests\commerce_stock_ui\Functional\StockUIBrowserTestBase;
+use Drupal\Tests\commerce_stock\FunctionalJavascript\StockWebDriverTestBase;
 
 /**
  * Test the admin complex transaction form.
@@ -13,7 +13,7 @@ use Drupal\Tests\commerce_stock_ui\Functional\StockUIBrowserTestBase;
  *
  * @group commerce_stock
  */
-class TransactionFormTest extends StockUIBrowserTestBase {
+class TransactionFormTest extends StockWebDriverTestBase {
 
   /**
    * The product variation we use in this test.
@@ -42,6 +42,18 @@ class TransactionFormTest extends StockUIBrowserTestBase {
   protected $transactionTypesManager;
 
   /**
+   * Modules to enable.
+   *
+   * @var array
+   */
+  public static $modules = [
+    'commerce_stock_ui_test',
+    'commerce_stock_ui',
+    'commerce_stock_local',
+    'commerce_stock',
+  ];
+
+  /**
    * {@inheritdoc}
    */
   public function setUp() {
@@ -67,7 +79,7 @@ class TransactionFormTest extends StockUIBrowserTestBase {
     $this->context = new Context($this->adminUser, $this->store);
     $locations = $stockConfig->getAvailabilityLocations($this->context, $this->variation);
 
-    $this->stockUpdater->createTransaction($this->variation, $locations[1]->getId(), '', 10, StockTransactionsInterface::STOCK_IN,$this->adminUser->id(),NULL,NULL, 10.10, 'USD', []);
+    $this->stockUpdater->createTransaction($this->variation, $locations[1]->getId(), '', 10, StockTransactionsInterface::STOCK_IN, $this->adminUser->id(), NULL, NULL, 10.10, 'USD', []);
 
     self::assertTrue($stockChecker->getTotalStockLevel($this->variation, $locations) == 10);
   }
@@ -89,7 +101,7 @@ class TransactionFormTest extends StockUIBrowserTestBase {
     $this->assertSession()->buttonExists('Select variation');
     $this->assertSession()->fieldExists('product_variation');
     $this->saveHtmlOutput();
-    $this->assertSession()->fieldExists('transaction_details_form[quantity]');
+    $this->assertSession()->fieldExists('stock_transaction_form[transaction_type_detail_form][transaction_details_form][quantity]');
     $this->assertSession()->optionExists('transaction_type_selection', 'stock_in');
     // Check if the transaction types select component is healthy.
     $this->transactionTypesManager->getDefinitions();
@@ -97,7 +109,7 @@ class TransactionFormTest extends StockUIBrowserTestBase {
     foreach ($this->transactionTypesManager->getDefinitions() as $transactionType) {
       $this->assertSession()->optionExists('transaction_type_selection', $transactionType['id']);
     }
-    $this->assertSession()->buttonExists('Submit');
+    $this->assertSession()->buttonExists('Create transaction');
   }
 
 }

@@ -7,10 +7,13 @@ use Drupal\commerce\PurchasableEntityInterface;
 use Drupal\commerce_order\Event\OrderEvent;
 use Drupal\commerce_order\Event\OrderEvents;
 use Drupal\commerce_order\Event\OrderItemEvent;
+use Drupal\commerce_stock\ContextCreatorTrait;
 use Drupal\commerce_stock\Plugin\StockEventsInterface;
 use Drupal\commerce_stock\StockLocationInterface;
 use Drupal\commerce_stock\StockServiceManagerInterface;
 use Drupal\commerce_stock\StockTransactionsInterface;
+use Drupal\Core\Entity\Entity;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\state_machine\Event\WorkflowTransitionEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -18,6 +21,9 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * Performs stock transactions on order and order item events.
  */
 class OrderEventSubscriber implements EventSubscriberInterface {
+
+  use ContextCreatorTrait;
+  use StringTranslationTrait;
 
   /**
    * The stock service manager.
@@ -32,7 +38,9 @@ class OrderEventSubscriber implements EventSubscriberInterface {
    * @param \Drupal\commerce_stock\StockServiceManagerInterface $stock_service_manager
    *   The stock service manager.
    */
-  public function __construct(StockServiceManagerInterface $stock_service_manager) {
+  public function __construct(
+    StockServiceManagerInterface $stock_service_manager
+  ) {
     $this->stockServiceManager = $stock_service_manager;
   }
 
@@ -76,14 +84,16 @@ class OrderEventSubscriber implements EventSubscriberInterface {
           return;
         }
         $quantity = -1 * $item->getQuantity();
-        $context = new Context($order->getCustomer(), $order->getStore());
-        $location = $service->getConfiguration()->getTransactionLocation($context, $entity, $quantity);
+        $context = self::createContextFromOrder($order);
+        $location = $service->getConfiguration()
+          ->getTransactionLocation($context, $entity, $quantity);
         $transaction_type = StockTransactionsInterface::STOCK_SALE;
         $metadata = [
+          'data' => ['message' => 'order placed'],
         ];
 
         $this->runTransactionEvent(StockEventsInterface::ORDER_PLACE_EVENT, $context,
-          $entity, $quantity, $location, $transaction_type, $metadata);
+          $entity, $quantity, $location, $transaction_type, $order->id(), $metadata);
       }
     }
   }
@@ -103,21 +113,33 @@ class OrderEventSubscriber implements EventSubscriberInterface {
    *   The stock location.
    * @param int $transaction_type_id
    *   The transaction type ID.
+   * @param string|int|null $order_id
+   *   The commerce order identifier or NULL.
    * @param array $metadata
    *   Holds all the optional values those are:
-   *     - related_oid: related order.
-   *     - related_uid: related user.
+   *     - related_tid: related transaction.
+   *     - unit_cost: unit cost.
+   *     - currency: the currency of the unit cost.
    *     - data: Serialized data array holding a message.
    *
    * @return int
    *   Return the ID of the transaction or FALSE if no transaction created.
    */
-  private function runTransactionEvent($orderEvent, Context $context, PurchasableEntityInterface $entity, $quantity, StockLocationInterface $location, $transaction_type_id, array $metadata) {
+  private function runTransactionEvent(
+    $orderEvent,
+    Context $context,
+    PurchasableEntityInterface $entity,
+    $quantity,
+    StockLocationInterface $location,
+    $transaction_type_id,
+    $order_id = NULL,
+    array $metadata = []
+  ) {
 
     $type = \Drupal::service('plugin.manager.stock_events');
     $plugin = $type->createInstance('core_stock_events');
     return $plugin->stockEvent($context, $entity, $orderEvent, $quantity, $location,
-      $transaction_type_id, $metadata);
+      $transaction_type_id, $order_id, $metadata);
   }
 
   /**
@@ -131,17 +153,7 @@ class OrderEventSubscriber implements EventSubscriberInterface {
    */
   public function onOrderUpdate(OrderEvent $event) {
     $order = $event->getOrder();
-    $original_order = $order->original;
-
-    // In certain cases we have no original order object. If loading from
-    // storage fails, we bailout.
-    // @ToDo Consider how this may change due to: ToDo https://www.drupal.org/project/drupal/issues/2839195
-    if (!$original_order) {
-      $original_order = \Drupal::entityTypeManager()->getStorage('commerce_order')->loadUnchanged($order->id());
-      if (!$original_order) {
-        return;
-      }
-    }
+    $original_order = self::getOriginalEntity($order);
 
     foreach ($order->getItems() as $item) {
       if (!$original_order->hasItem($item)) {
@@ -159,18 +171,17 @@ class OrderEventSubscriber implements EventSubscriberInterface {
           if ($checker->getIsAlwaysInStock($entity)) {
             return;
           }
-          $context = new Context($order->getCustomer(), $order->getStore());
-          $location = $service->getConfiguration()->getTransactionLocation($context, $entity, $item->getQuantity());
+          $context = self::createContextFromOrder($order);
+          $location = $service->getConfiguration()
+            ->getTransactionLocation($context, $entity, $item->getQuantity());
           $transaction_type = StockTransactionsInterface::STOCK_SALE;
           $quantity = -1 * $item->getQuantity();
           $metadata = [
-            'related_oid' => $order->id(),
-            'related_uid' => $order->getCustomerId(),
             'data' => ['message' => 'order item added'],
           ];
 
           $this->runTransactionEvent(StockEventsInterface::ORDER_UPDATE_EVENT, $context,
-            $entity, $quantity, $location, $transaction_type, $metadata);
+            $entity, $quantity, $location, $transaction_type, $order->id(), $metadata);
         }
       }
     }
@@ -184,7 +195,9 @@ class OrderEventSubscriber implements EventSubscriberInterface {
    */
   public function onOrderCancel(WorkflowTransitionEvent $event) {
     $order = $event->getEntity();
-    if ($order->original && $order->original->getState()->value === 'draft') {
+    $original_order = self::getOriginalEntity($order);
+
+    if ($original_order && $original_order->getState()->value === 'draft') {
       return;
     }
     foreach ($order->getItems() as $item) {
@@ -200,17 +213,16 @@ class OrderEventSubscriber implements EventSubscriberInterface {
           return;
         }
         $quantity = $item->getQuantity();
-        $context = new Context($order->getCustomer(), $order->getStore());
-        $location = $service->getConfiguration()->getTransactionLocation($context, $entity, $quantity);
+        $context = self::createContextFromOrder($order);
+        $location = $service->getConfiguration()
+          ->getTransactionLocation($context, $entity, $quantity);
         $transaction_type = StockTransactionsInterface::STOCK_RETURN;
         $metadata = [
-          'related_oid' => $order->id(),
-          'related_uid' => $order->getCustomerId(),
           'data' => ['message' => 'order canceled'],
         ];
 
         $this->runTransactionEvent(StockEventsInterface::ORDER_CANCEL_EVENT, $context,
-          $entity, $quantity, $location, $transaction_type, $metadata);
+          $entity, $quantity, $location, $transaction_type, $order->id(), $metadata);
       }
     }
   }
@@ -242,16 +254,15 @@ class OrderEventSubscriber implements EventSubscriberInterface {
           return;
         }
         $quantity = $item->getQuantity();
-        $context = new Context($order->getCustomer(), $order->getStore());
-        $location = $service->getConfiguration()->getTransactionLocation($context, $entity, $quantity);
+        $context = self::createContextFromOrder($order);
+        $location = $service->getConfiguration()
+          ->getTransactionLocation($context, $entity, $quantity);
         $transaction_type = StockTransactionsInterface::STOCK_RETURN;
         $metadata = [
-          'related_oid' => $order->id(),
-          'related_uid' => $order->getCustomerId(),
           'data' => ['message' => 'order deleted'],
         ];
         $this->runTransactionEvent(StockEventsInterface::ORDER_DELET_EVENT, $context,
-          $entity, $quantity, $location, $transaction_type, $metadata);
+          $entity, $quantity, $location, $transaction_type, $order->id(), $metadata);
       }
     }
   }
@@ -267,7 +278,8 @@ class OrderEventSubscriber implements EventSubscriberInterface {
     $order = $item->getOrder();
 
     if ($order && !in_array($order->getState()->value, ['draft', 'canceled'])) {
-      $diff = $item->original->getQuantity() - $item->getQuantity();
+      $original = self::getOriginalEntity($item);
+      $diff = $original->getQuantity() - $item->getQuantity();
       if ($diff) {
         $entity = $item->getPurchasedEntity();
         if (!$entity) {
@@ -281,16 +293,15 @@ class OrderEventSubscriber implements EventSubscriberInterface {
             return;
           }
           $transaction_type = ($diff < 0) ? StockTransactionsInterface::STOCK_SALE : StockTransactionsInterface::STOCK_RETURN;
-          $context = new Context($order->getCustomer(), $order->getStore());
-          $location = $service->getConfiguration()->getTransactionLocation($context, $entity, $diff);
+          $context = self::createContextFromOrder($order);
+          $location = $service->getConfiguration()
+            ->getTransactionLocation($context, $entity, $diff);
           $metadata = [
-            'related_oid' => $order->id(),
-            'related_uid' => $order->getCustomerId(),
             'data' => ['message' => 'order item quantity updated'],
           ];
 
           $this->runTransactionEvent(StockEventsInterface::ORDER_ITEM_UPDATE_EVENT, $context,
-            $entity, $diff, $location, $transaction_type, $metadata);
+            $entity, $diff, $location, $transaction_type, $order->id(), $metadata);
         }
       }
     }
@@ -318,19 +329,50 @@ class OrderEventSubscriber implements EventSubscriberInterface {
         if ($checker->getIsAlwaysInStock($entity)) {
           return;
         }
-        $context = new Context($order->getCustomer(), $order->getStore());
-        $location = $service->getConfiguration()->getTransactionLocation($context, $entity, $item->getQuantity());
+        $context = self::createContextFromOrder($order);
+        self::createContextFromOrder($order);
+        $location = $service->getConfiguration()
+          ->getTransactionLocation($context, $entity, $item->getQuantity());
         $transaction_type = StockTransactionsInterface::STOCK_RETURN;
         $metadata = [
-          'related_oid' => $order->id(),
-          'related_uid' => $order->getCustomerId(),
           'data' => ['message' => 'order item deleted'],
         ];
 
         $this->runTransactionEvent(StockEventsInterface::ORDER_ITEM_DELETE_EVENT, $context,
-          $entity, $item->getQuantity(), $location, $transaction_type, $metadata);
+          $entity, $item->getQuantity(), $location, $transaction_type, $order->id(), $metadata);
       }
     }
+  }
+
+  /**
+   * Returns the entity from an updated entity object. In certain
+   * cases the $entity->original property is empty for updated entities. In such
+   * a situation we try to load the unchanged entity from storage.
+   *
+   * @param \Drupal\Core\Entity\Entity $entity
+   *   The changed/updated entity object.
+   *
+   * @return null|\Drupal\Core\Entity\Entity
+   *   The original unchanged entity object or NULL.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  public static function getOriginalEntity(Entity $entity) {
+    // $entity->original only exists during save. See
+    // \Drupal\Core\Entity\EntityStorageBase::save().
+    // If we don't have $entity->original we try to load it.
+    $original_entity = NULL;
+    $original_entity = $entity->original;
+
+    // @ToDo Consider how this may change due to: ToDo https://www.drupal.org/project/drupal/issues/2839195
+    if (!$original_entity) {
+      $id = $entity->getOriginalId() !== NULL ? $entity->getOriginalId() : $entity->id();
+      $original_entity = \Drupal::entityTypeManager()
+        ->getStorage($entity->getEntityTypeId())
+        ->loadUnchanged($id);
+    }
+    return $original_entity;
   }
 
 }

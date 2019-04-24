@@ -75,7 +75,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
       ->getPage()
       ->fillField($this->fieldName . '[0][adjustment]', $adjustment);
     $this->submitForm([], t('Save'));
-    $this->assertSession()->statusCodeEquals(200);
 
     $variation_in_table = $this->getSession()
       ->getPage()
@@ -91,7 +90,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
 
     // Test the widget on variation edit form.
     $this->drupalGet($this->variation->toUrl('edit-form'));
-    $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()
       ->fieldExists('commerce_stock_always_in_stock[value]');
     $this->assertSession()
@@ -110,7 +108,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
     ];
     $this->submitForm($variations_edit, 'Save');
 
-    $this->assertSession()->statusCodeEquals(200);
     $transaction = $this->getLastEntityTransaction($this->variation->id());
     $data = unserialize($transaction->data);
     $this->assertEquals($adjustment, $transaction->qty);
@@ -124,7 +121,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
     ];
     $this->configureFormDisplay($widget_id, $widget_settings, $entity_type, $bundle);
     $this->drupalGet($this->variation->toUrl('edit-form'));
-    $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->fieldExists($this->fieldName . '[0][adjustment]');
     $this->assertSession()
       ->fieldExists($this->fieldName . '[0][stock_transaction_note]');
@@ -140,7 +136,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
       $this->fieldName . '[0][stock_transaction_note]' => 'CustomNote',
     ];
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->statusCodeEquals(200);
 
     $transaction = $this->getLastEntityTransaction($this->variation->id());
     $data = unserialize($transaction->data);
@@ -192,7 +187,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
       'variations[entity][price][0][number]' => '99.99',
     ];
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->statusCodeEquals(200);
     // Check if product was created. Remember we created
     // product 1 in test setup.
     $product = Product::load(2);
@@ -219,7 +213,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
       'variations[entity][' . $this->fieldName . '][0][adjustment]' => $adjustment,
     ];
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->statusCodeEquals(200);
 
     \Drupal::entityTypeManager()->getStorage('commerce_product')->resetCache([2]);
     \Drupal::entityTypeManager()->getStorage('commerce_product_variation')->resetCache([1]);
@@ -250,7 +243,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
     ];
     $this->configureFormDisplay($widget_id, $widget_settings, $entity_type, $bundle);
     $this->drupalGet($this->variation->toUrl('edit-form'));
-    $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->fieldExists($this->fieldName . '[0][stock_level]');
     $this->assertSession()
       ->fieldNotExists($this->fieldName . '[0][adjustment]');
@@ -268,7 +260,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
       $this->fieldName . '[0][stock_level]' => $stock_level,
     ];
     $this->submitForm($variations_edit, 'Save');
-    $this->assertSession()->statusCodeEquals(200);
 
     $transaction = $this->getLastEntityTransaction($this->variation->id());
     $data = unserialize($transaction->data);
@@ -281,25 +272,21 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
     // If the absolute stock level is the same as before, it shouldn't trigger
     // any transaction.
     $this->drupalGet($this->variation->toUrl('edit-form'));
-    $this->assertSession()->statusCodeEquals(200);
     $stock_level = 15;
     $variations_edit = [
       $this->fieldName . '[0][stock_level]' => $stock_level,
     ];
     $this->submitForm($variations_edit, 'Save');
-    $this->assertSession()->statusCodeEquals(200);
     $transaction2 = $this->getLastEntityTransaction($this->variation->id());
     $this->assertEquals($transaction->id, $transaction2->id);
 
     $this->drupalGet($this->variation->toUrl('edit-form'));
-    $this->assertSession()->statusCodeEquals(200);
     // Empty absolute stock_level shoudn't trigger any transaction.
     $stock_level = '';
     $edit = [
       $this->fieldName . '[0][stock_level]' => $stock_level,
     ];
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->statusCodeEquals(200);
     $transaction3 = $this->getLastEntityTransaction($this->variation->id());
     $this->assertEquals($transaction->id, $transaction3->id);
 
@@ -310,7 +297,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
     ];
     $this->configureFormDisplay($widget_id, $widget_settings, $entity_type, $bundle);
     $this->drupalGet($this->variation->toUrl('edit-form'));
-    $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->fieldExists($this->fieldName . '[0][stock_level]');
     $this->assertSession()
       ->fieldNotExists($this->fieldName . '[0][adjustment]');
@@ -328,7 +314,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
       $this->fieldName . '[0][stock_transaction_note]' => 'CustomNote',
     ];
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->statusCodeEquals(200);
     $transaction = $this->getLastEntityTransaction($this->variation->id());
     $data = unserialize($transaction->data);
     $this->assertEquals(-10, $transaction->qty);
@@ -337,13 +322,11 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
 
     // Testing that zero value, results in a transaction.
     $this->drupalGet($this->variation->toUrl('edit-form'));
-    $this->assertSession()->statusCodeEquals(200);
     $stock_level = 0;
     $edit = [
       $this->fieldName . '[0][stock_level]' => $stock_level,
     ];
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->statusCodeEquals(200);
     $transaction = $this->getLastEntityTransaction($this->variation->id());
     $this->assertEquals(-5, $transaction->qty);
   }
@@ -392,7 +375,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
       'variations[entity][price][0][number]' => '99.99',
     ];
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->statusCodeEquals(200);
     // Check if product was created. Remember we created
     // product 1 in test setup.
     $product = Product::load(2);
@@ -419,7 +401,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
       'variations[entity][' . $this->fieldName . '][0][stock_level]' => $stock_level,
     ];
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->statusCodeEquals(200);
 
     \Drupal::entityTypeManager()->getStorage('commerce_product')->resetCache([2]);
     \Drupal::entityTypeManager()->getStorage('commerce_product_variation')->resetCache([1]);
@@ -438,7 +419,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
       'variations[entity][' . $this->fieldName . '][0][stock_level]' => $stock_level,
     ];
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->statusCodeEquals(200);
     $transaction = $this->getLastEntityTransaction($variation->id());
     $this->assertEquals(-10, $transaction->qty);
   }
@@ -455,10 +435,8 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
     $this->configureFormDisplay($widget_id, $widget_settings, $entity_type, $bundle);
     $this->drupalGet($this->variation->toUrl('edit-form'));
 
-    $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->linkExists(t('transaction form'));
     $this->clickLink(t('transaction form'));
-    $this->assertSession()->statusCodeEquals(200);
     $path = '/admin/commerce/config/stock/transactions';
     $this->assertSession()->addressEquals($path);
   }
@@ -477,7 +455,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
     ];
     $this->configureFormDisplay($widget_id, $widget_settings, $entity_type, $bundle);
     $this->drupalGet($this->variation->toUrl('edit-form'));
-    $this->assertSession()->statusCodeEquals(200);
 
     // Ensure the stock part of the form is healty.
     $this->assertSession()
@@ -493,7 +470,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
       $this->fieldName . '[0][adjustment]' => $adjustment,
     ];
     $this->submitForm($variations_edit, 'Save');
-    $this->assertSession()->statusCodeEquals(200);
     $transaction = $this->getLastEntityTransaction($this->variation->id());
     $this->assertEquals($adjustment, $transaction->qty);
     $this->assertEquals($this->adminUser->id(), $transaction->related_uid);
@@ -505,7 +481,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
     ];
     $this->configureFormDisplay($widget_id, $widget_settings, $entity_type, $bundle);
     $this->drupalGet($this->variation->toUrl('edit-form'));
-    $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->fieldExists($this->fieldName . '[0][stock_level]');
 
     $stock_level = 20;
@@ -513,7 +488,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
       $this->fieldName . '[0][stock_level]' => $stock_level,
     ];
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->statusCodeEquals(200);
 
     $transaction = $this->getLastEntityTransaction($this->variation->id());
     // We setup our variation with an initial stock of 15. So setting the
@@ -528,7 +502,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
     ];
     $this->configureFormDisplay($widget_id, $widget_settings, $entity_type, $bundle);
     $this->drupalGet($this->variation->toUrl('edit-form'));
-    $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->linkExists('New transaction');
   }
 

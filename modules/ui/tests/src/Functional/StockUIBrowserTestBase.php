@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\commerce_stock_ui\Functional;
 
-use Drupal\Tests\commerce\FunctionalJavascript\JavascriptTestTrait;
 use Drupal\Tests\commerce_stock\Functional\StockBrowserTestBase;
 
 /**

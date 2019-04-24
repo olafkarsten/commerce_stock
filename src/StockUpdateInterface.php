@@ -29,13 +29,13 @@ interface StockUpdateInterface {
    *   The order id the transaction belongs to or NULL if the transaction
    *   was not triggered by an order.
    * @param int $related_tid
-   *    The related transaction id or NULL.
+   *   The related transaction id or NULL.
    * @param null|float $unit_cost
-   *    The cost of a single unit or NULL.
-   * @param null|$currency_code
-   *    The currency of the unit cost.
+   *   The cost of a single unit or NULL.
+   * @param null| $currency_code
+   *   The currency of the unit cost.
    * @param array $data
-   *     Array of arbitrary data.
+   *   Array of arbitrary data.
    *
    * @return int
    *   Return the ID of the transaction.
