@@ -138,6 +138,7 @@ install:
   # Installed after Drush to prevent Composer conflicts around symfony/yaml.
   - composer global require "drupal/coder:8.3.*"
   - phpcs --config-set installed_paths $HOME/.composer/vendor/drupal/coder/coder_sniffer
+  - phpcs --standard=Drupal -e
 
 before_script:
   - drupal-ti --include ".travis-before-script.sh"
