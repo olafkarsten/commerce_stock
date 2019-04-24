@@ -5,12 +5,12 @@ namespace Drupal\commerce_stock;
 use Drupal\commerce\PurchasableEntityInterface;
 
 /**
- * Defines a common interface for writing stock.
+ * Defines a common interface for a generic transaction that adds stock.
  */
-interface StockUpdateInterface {
+interface StockInInterface {
 
   /**
-   * Create a stock transaction.
+   * Adding stock.
    *
    * @param \Drupal\commerce\PurchasableEntityInterface $entity
    *   The purchasable entity.
@@ -28,19 +28,19 @@ interface StockUpdateInterface {
    * @param int|null $order_id
    *   The order id the transaction belongs to or NULL if the transaction
    *   was not triggered by an order.
-   * @param int $related_tid
-   *   The related transaction id or NULL.
-   * @param null|float $unit_cost
-   *   The cost of a single unit or NULL.
-   * @param null| $currency_code
-   *   The currency of the unit cost.
+   * @param string|null $transaction_note
+   *   The transaction note or NULL.
+   * @param float $unit_cost
+   *   The unit cost.
+   * @param string $currency_code
+   *   The currency code.
+   * @param string|int|null $related_tid
+   *   Transaction id of a related transaction e.g. in case of transfering
+   *   stock from one bin to another.
    * @param array $data
-   *   Array of arbitrary data.
-   *
-   * @return int
-   *   Return the ID of the transaction.
+   *   Amy arbitrary transaction related data.
    */
-  public function createTransaction(
+  public function addStock(
     PurchasableEntityInterface $entity,
     $location_id,
     $zone,
@@ -48,9 +48,10 @@ interface StockUpdateInterface {
     $transaction_type_id,
     $user_id,
     $order_id = NULL,
-    $related_tid = NULL,
+    $transaction_note = NULL,
     $unit_cost = NULL,
     $currency_code = NULL,
+    $related_tid = NULL,
     array $data = []
   );
 

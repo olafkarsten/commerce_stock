@@ -12,7 +12,19 @@ class AlwaysInStock implements StockCheckInterface, StockUpdateInterface {
   /**
    * {@inheritdoc}
    */
-  public function createTransaction(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $unit_cost, $currency_code, $transaction_type_id, array $metadata) {
+  public function createTransaction(
+    PurchasableEntityInterface $entity,
+    $location_id,
+    $zone,
+    $quantity,
+    $transaction_type_id,
+    $user_id,
+    $order_id = NULL,
+    $related_tid = NULL,
+    $unit_cost = NULL,
+    $currency_code = NULL,
+    array $data = []
+  ) {
     // Do nothing and return a NULL value as its N/A.
     return NULL;
   }
@@ -20,15 +32,20 @@ class AlwaysInStock implements StockCheckInterface, StockUpdateInterface {
   /**
    * {@inheritdoc}
    */
-  public function getTotalStockLevel(PurchasableEntityInterface $entity, array $locations) {
-    // @todo this can be configurable?
-    return 999;
+  public function getTotalStockLevel(
+    PurchasableEntityInterface $entity,
+    array $locations
+  ) {
+    return PHP_INT_MAX;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getIsInStock(PurchasableEntityInterface $entity, array $locations) {
+  public function getIsInStock(
+    PurchasableEntityInterface $entity,
+    array $locations
+  ) {
     return TRUE;
   }
 
