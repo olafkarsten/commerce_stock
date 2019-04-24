@@ -22,7 +22,7 @@ class DisabledStockEvents extends PluginBase implements StockEventsInterface {
   /**
    * {@inheritdoc}
    */
-  public function stockEvent(Context $context, PurchasableEntityInterface $entity, $stockEvent, $quantity, StockLocationInterface $location, $transaction_type, array $metadata) {
+  public function stockEvent(Context $context, PurchasableEntityInterface $entity, $stockEvent, $quantity, StockLocationInterface $location, $transaction_type, $order_id = NULL, array $metadata = []) {
     // This does nothing.
     return NULL;
   }
