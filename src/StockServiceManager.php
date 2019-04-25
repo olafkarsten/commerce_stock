@@ -2,10 +2,10 @@
 
 namespace Drupal\commerce_stock;
 
+use Drupal\commerce\Context;
 use Drupal\commerce\PurchasableEntityInterface;
 use Drupal\commerce_store\CurrentStoreInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\commerce\Context;
 use Drupal\Core\Session\AccountInterface;
 
 /**
@@ -57,7 +57,11 @@ class StockServiceManager implements StockServiceManagerInterface, StockTransact
    * @param \Drupal\Core\Session\AccountInterface $current_user
    *   The current user.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, CurrentStoreInterface $current_store, AccountInterface $current_user) {
+  public function __construct(
+    ConfigFactoryInterface $config_factory,
+    CurrentStoreInterface $current_store,
+    AccountInterface $current_user
+  ) {
     $this->configFactory = $config_factory;
     $this->currentStore = $current_store;
     $this->currentUser = $current_user;
@@ -120,8 +124,7 @@ class StockServiceManager implements StockServiceManagerInterface, StockTransact
   public function isValidContext(PurchasableEntityInterface $entity) {
     try {
       $this->getContextDetails($entity);
-    }
-    catch (\Exception $e) {
+    } catch (\Exception $e) {
       return FALSE;
     }
     return TRUE;
@@ -133,14 +136,14 @@ class StockServiceManager implements StockServiceManagerInterface, StockTransact
    * @param \Drupal\commerce\PurchasableEntityInterface $entity
    *   The purchasable entity.
    *
+   * @return \Drupal\commerce\Context
+   *   The Stock service context.
    * @throws \Exception
    *   When the entity can't be purchased from the current store.
    *
    * @see \Drupal\commerce_cart\Form\AddToCartForm::selectStore()
    *   Original logic comes from this function.
    *
-   * @return \Drupal\commerce\Context
-   *   The Stock service context.
    */
   private function getContextDetails(PurchasableEntityInterface $entity) {
     // Make sure the current store is in the entity stores.
@@ -168,7 +171,11 @@ class StockServiceManager implements StockServiceManagerInterface, StockTransact
    *
    * @todo code sniffer error here, can't have optional params first.
    */
-  public function getTransactionLocation(Context $context = NULL, PurchasableEntityInterface $entity, $quantity) {
+  public function getTransactionLocation(
+    Context $context = NULL,
+    PurchasableEntityInterface $entity,
+    $quantity
+  ) {
     $stock_config = $this->getService($entity)->getConfiguration();
     return $stock_config->getTransactionLocation($context, $entity, $quantity);
   }
@@ -176,7 +183,16 @@ class StockServiceManager implements StockServiceManagerInterface, StockTransact
   /**
    * {@inheritdoc}
    */
-  public function createTransaction(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $unit_cost, $currency_code, $transaction_type_id, array $metadata = []) {
+  public function createTransaction(
+    PurchasableEntityInterface $entity,
+    $location_id,
+    $zone,
+    $quantity,
+    $unit_cost,
+    $currency_code,
+    $transaction_type_id,
+    array $metadata = []
+  ) {
     $stock_updater = $this->getService($entity)->getStockUpdater();
     $stock_updater->createTransaction($entity, $location_id, $zone, $quantity, $unit_cost, $currency_code, $transaction_type_id, $metadata);
   }
@@ -184,7 +200,15 @@ class StockServiceManager implements StockServiceManagerInterface, StockTransact
   /**
    * {@inheritdoc}
    */
-  public function receiveStock(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $unit_cost, $currency_code, $message = NULL) {
+  public function receiveStock(
+    PurchasableEntityInterface $entity,
+    $location_id,
+    $zone,
+    $quantity,
+    $unit_cost,
+    $currency_code,
+    $message = NULL
+  ) {
     $transaction_type_id = StockTransactionsInterface::NEW_STOCK;
     if (is_null($message)) {
       $metadata = [];
@@ -205,7 +229,17 @@ class StockServiceManager implements StockServiceManagerInterface, StockTransact
   /**
    * {@inheritdoc}
    */
-  public function sellStock(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $unit_cost, $currency_code, $order_id, $user_id, $message = NULL) {
+  public function sellStock(
+    PurchasableEntityInterface $entity,
+    $location_id,
+    $zone,
+    $quantity,
+    $unit_cost,
+    $currency_code,
+    $order_id,
+    $user_id,
+    $message = NULL
+  ) {
     $transaction_type_id = StockTransactionsInterface::STOCK_SALE;
     $metadata = [
       'related_oid' => $order_id,
@@ -223,7 +257,17 @@ class StockServiceManager implements StockServiceManagerInterface, StockTransact
   /**
    * {@inheritdoc}
    */
-  public function moveStock(PurchasableEntityInterface $entity, $from_location_id, $to_location_id, $from_zone, $to_zone, $quantity, $unit_cost, $currency_code, $message = NULL) {
+  public function moveStock(
+    PurchasableEntityInterface $entity,
+    $from_location_id,
+    $to_location_id,
+    $from_zone,
+    $to_zone,
+    $quantity,
+    $unit_cost,
+    $currency_code,
+    $message = NULL
+  ) {
     if (is_null($message)) {
       $metadata = [];
     }
@@ -247,7 +291,17 @@ class StockServiceManager implements StockServiceManagerInterface, StockTransact
   /**
    * {@inheritdoc}
    */
-  public function returnStock(PurchasableEntityInterface $entity, $location_id, $zone, $quantity, $unit_cost, $currency_code, $order_id, $user_id, $message = NULL) {
+  public function returnStock(
+    PurchasableEntityInterface $entity,
+    $location_id,
+    $zone,
+    $quantity,
+    $unit_cost,
+    $currency_code,
+    $order_id,
+    $user_id,
+    $message = NULL
+  ) {
     $transaction_type_id = StockTransactionsInterface::STOCK_RETURN;
     $metadata = [
       'related_oid' => $order_id,
@@ -265,16 +319,16 @@ class StockServiceManager implements StockServiceManagerInterface, StockTransact
   /**
    * Gets the total stock level for a given purchasable entity.
    *
-   * @todo - we should make the method more obscure as it does not support
-   * the context. Only useful for single store sites.
-   *
    * @param \Drupal\commerce\PurchasableEntityInterface $entity
    *   The purchasable entity to get the stock level for.
    *
-   * @throws \Exception
-   *
    * @return int
    *   The stock level.
+   * @throws \Exception
+   *
+   * @todo - we should make the method more obscure as it does not support
+   * the context. Only useful for single store sites.
+   *
    */
   public function getStockLevel(PurchasableEntityInterface $entity) {
     if ($entity->isNew()) {

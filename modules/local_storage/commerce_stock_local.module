@@ -148,3 +148,37 @@ function template_preprocess_commerce_stock_location(array &$variables) {
   }
 
 }
+
+/**
+ * Implements hook_theme().
+ */
+function commerce_stock_local_theme() {
+  $theme = [];
+  $theme['commerce_stock_transaction'] = [
+    'render element' => 'elements',
+    'file' => 'commerce_stock_transaction.page.inc',
+    'template' => 'commerce_stock_transaction',
+  ];
+  $theme['commerce_stock_transaction_content_add_list'] = [
+    'render element' => 'content',
+    'variables' => ['content' => NULL],
+    'file' => 'commerce_stock_transaction.page.inc',
+  ];
+  return $theme;
+}
+
+/**
+* Implements hook_theme_suggestions_HOOK().
+*/
+function commerce_stock_local_theme_suggestions_commerce_stock_transaction(array $variables) {
+  $suggestions = [];
+  $entity = $variables['elements']['#commerce_stock_transaction'];
+  $sanitized_view_mode = strtr($variables['elements']['#view_mode'], '.', '_');
+
+  $suggestions[] = 'commerce_stock_transaction__' . $sanitized_view_mode;
+  $suggestions[] = 'commerce_stock_transaction__' . $entity->bundle();
+  $suggestions[] = 'commerce_stock_transaction__' . $entity->bundle() . '__' . $sanitized_view_mode;
+  $suggestions[] = 'commerce_stock_transaction__' . $entity->id();
+  $suggestions[] = 'commerce_stock_transaction__' . $entity->id() . '__' . $sanitized_view_mode;
+  return $suggestions;
+}

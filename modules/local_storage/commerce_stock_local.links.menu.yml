@@ -16,3 +16,21 @@ entity.commerce_stock_location_type.collection:
   description: 'Manage your stock location types.'
   parent: 'commerce_stock.configuration'
   weight: 30
+
+# Stock transaction menu items definition
+entity.commerce_stock_transaction.collection:
+  title: 'Stock transaction list'
+  route_name: entity.commerce_stock_transaction.collection
+  description: 'List Stock transaction entities'
+  parent: system.admin_structure
+  weight: 100
+
+
+# Stock transaction type menu items definition
+entity.commerce_stock_transaction_type.collection:
+  title: 'Stock transaction type'
+  route_name: entity.commerce_stock_transaction_type.collection
+  description: 'List Stock transaction type (bundles)'
+  parent: system.admin_structure
+  weight: 99
+

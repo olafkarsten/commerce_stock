@@ -19,3 +19,22 @@ view commerce stock location entities:
 
 view inactive commerce stock location entities:
   title: 'View inactive commerce stock location entities.'
+add stock transaction entities:
+  title: 'Create new Stock transaction entities'
+
+administer stock transaction entities:
+  title: 'Administer Stock transaction entities'
+  description: 'Allow to access the administration form to configure Stock transaction entities.'
+  restrict access: true
+
+delete stock transaction entities:
+  title: 'Delete Stock transaction entities'
+
+edit stock transaction entities:
+  title: 'Edit Stock transaction entities'
+
+view published stock transaction entities:
+  title: 'View published Stock transaction entities'
+
+view unpublished stock transaction entities:
+  title: 'View unpublished Stock transaction entities'

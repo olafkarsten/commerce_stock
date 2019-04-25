@@ -8,3 +8,14 @@ entity.commerce_stock_location_type.add_form:
   title: 'Add stock location type'
   appears_on:
     - entity.commerce_stock_location_type.collection
+entity.commerce_stock_transaction.add_form:
+  route_name: entity.commerce_stock_transaction.add_page
+  title: 'Add Stock transaction'
+  appears_on:
+    - entity.commerce_stock_transaction.collection
+entity.commerce_stock_transaction_type.add_form:
+  route_name: entity.commerce_stock_transaction_type.add_form
+  title: 'Add Stock transaction type'
+  appears_on:
+    - entity.commerce_stock_transaction_type.collection
+
