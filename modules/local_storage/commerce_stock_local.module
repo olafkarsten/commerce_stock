@@ -115,6 +115,16 @@ function commerce_stock_local_theme() {
     'render element' => 'content',
     'variables' => ['content' => NULL],
   ];
+  $theme['commerce_stock_transaction'] = [
+    'render element' => 'elements',
+    'file' => 'commerce_stock_transaction.page.inc',
+    'template' => 'commerce_stock_transaction',
+  ];
+  $theme['commerce_stock_transaction_content_add_list'] = [
+    'render element' => 'content',
+    'variables' => ['content' => NULL],
+    'file' => 'commerce_stock_transaction.page.inc',
+  ];
   return $theme;
 }
 
@@ -147,24 +157,6 @@ function template_preprocess_commerce_stock_location(array &$variables) {
     $variables['commerce_stock_location'][$key] = $variables['elements'][$key];
   }
 
-}
-
-/**
- * Implements hook_theme().
- */
-function commerce_stock_local_theme() {
-  $theme = [];
-  $theme['commerce_stock_transaction'] = [
-    'render element' => 'elements',
-    'file' => 'commerce_stock_transaction.page.inc',
-    'template' => 'commerce_stock_transaction',
-  ];
-  $theme['commerce_stock_transaction_content_add_list'] = [
-    'render element' => 'content',
-    'variables' => ['content' => NULL],
-    'file' => 'commerce_stock_transaction.page.inc',
-  ];
-  return $theme;
 }
 
 /**

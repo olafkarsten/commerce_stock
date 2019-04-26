@@ -48,10 +48,12 @@ use Drupal\user\UserInterface;
  *     "langcode" = "langcode",
  *   },
  *   links = {
- *     "canonical" = "/commerce_stock_transaction/{commerce_stock_transaction}",
- *     "add-page" = "/commerce_stock_transaction/add",
- *     "add-form" = "/commerce_stock_transaction/add/{commerce_stock_transaction_type}",edit",
- *     "collection" = "/admin/commerce/stock_transactions",
+ *     "canonical" = "/admin/commerce/commerce_stock_transaction/{commerce_stock_transaction}",
+ *     "add-page" = "/admin/commerce/commerce_stock_transaction/add",
+ *     "add-form" = "/admin/commerce/commerce_stock_transaction/add/{commerce_stock_transaction_type}",
+ *     "edit-form" = "/admin/commerce/commerce_stock_transaction/{commerce_stock_transaction}/edit",
+ *     "delete-form" = "/admin/commerce/commerce_stock_transaction/{commerce_stock_transaction}/delete",
+ *     "collection" = "/admin/commerce/commerce_stock_transaction",
  *   },
  *   bundle_entity_type = "commerce_stock_transaction_type",
  *   field_ui_base_route = "entity.commerce_stock_transaction_type.edit_form"
@@ -250,7 +252,7 @@ class StockTransaction extends CommerceContentEntityBase implements StockTransac
     array $base_field_definitions
   ) {
     /** @var \Drupal\commerce_stock_local\Entity\StockTransactionTypeInterface $stock_transaction_type */
-    $stock_transaction_type = StockTransaction::load($bundle);
+    $stock_transaction_type = StockTransactionType::load($bundle);
     $purchasable_entity_type = $stock_transaction_type->getPurchasableEntityTypeId();
     $fields = [];
     $fields['purchasable_entity'] = clone $base_field_definitions['purchasable_entity'];

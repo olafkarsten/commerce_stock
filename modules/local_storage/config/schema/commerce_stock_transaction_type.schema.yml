@@ -10,3 +10,6 @@ commerce_stock_local.commerce_stock_transaction_type.*:
       label: 'Label'
     uuid:
       type: string
+    purchasableEntityType:
+      type: string
+      label: 'Purchasable entity type'

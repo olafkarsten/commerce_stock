@@ -2,7 +2,9 @@
 
 namespace Drupal\commerce_stock_local\Form;
 
+use Drupal\commerce\PurchasableEntityInterface;
 use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -17,6 +19,16 @@ class StockTransactionTypeForm extends EntityForm {
     $form = parent::form($form, $form_state);
 
     $commerce_stock_transaction_type = $this->entity;
+
+    // Prepare the list of purchasable entity types.
+    $entity_types = $this->entityTypeManager->getDefinitions();
+    $purchasable_entity_types = array_filter($entity_types, function (EntityTypeInterface $entity_type) {
+      return $entity_type->entityClassImplements(PurchasableEntityInterface::class);
+    });
+    $purchasable_entity_types = array_map(function (EntityTypeInterface $entity_type) {
+      return $entity_type->getLabel();
+    }, $purchasable_entity_types);
+
     $form['label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Label'),
@@ -35,7 +47,14 @@ class StockTransactionTypeForm extends EntityForm {
       '#disabled' => !$commerce_stock_transaction_type->isNew(),
     ];
 
-    /* You will need additional form elements for your custom properties. */
+    $form['purchasableEntityType'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Purchasable entity type'),
+      '#default_value' => $commerce_stock_transaction_type->getPurchasableEntityTypeId(),
+      '#options' => $purchasable_entity_types,
+      '#empty_value' => '',
+      '#disabled' => !$commerce_stock_transaction_type->isNew(),
+    ];
 
     return $form;
   }
