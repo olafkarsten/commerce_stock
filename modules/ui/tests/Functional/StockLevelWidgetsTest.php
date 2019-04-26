@@ -2,9 +2,6 @@
 
 namespace Drupal\Tests\commerce_stock_ui\Functional;
 
-use Behat\Mink\Exception\ExpectationException;
-use Drupal\commerce\EntityHelper;
-use Drupal\commerce_product\Entity\Product;
 use Drupal\Tests\commerce_stock_field\Kernel\StockLevelFieldCreationTrait;
 use Drupal\Tests\commerce_stock_local\Kernel\StockTransactionQueryTrait;
 use Drupal\Tests\commerce_stock_field\Functional\StockLevelFieldTestBase;
