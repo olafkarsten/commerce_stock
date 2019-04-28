@@ -48,7 +48,7 @@ class LocalStockServiceConfig implements StockServiceConfigInterface {
    * {@inheritdoc}
    */
   public function getAvailabilityLocations(Context $context, PurchasableEntityInterface $entity) {
-    return $this->storage->loadInContext($context, $entity);
+    return $this->storage->loadFromContext($context, $entity);
   }
 
 }

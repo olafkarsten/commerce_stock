@@ -2,6 +2,7 @@
 
 namespace Drupal\commerce_stock_local\Event;
 
+use Drupal\commerce\Context;
 use Drupal\commerce\PurchasableEntityInterface;
 use Symfony\Component\EventDispatcher\Event;
 
@@ -30,14 +31,17 @@ class FilterLocationsEvent extends Event {
   /**
    * Constructs a new FilterLocationsEvent object.
    *
+   * @param \Drupal\commerce\Context $context
+   *   The context.
    * @param \Drupal\commerce\PurchasableEntityInterface $entity
    *   The purchasable entity.
    * @param \Drupal\commerce_stock_local\Entity\LocalStockLocationInterface[] $locations
    *   The local stock locations.
    */
-  public function __construct(PurchasableEntityInterface $entity, array $locations) {
+  public function __construct(Context $context, PurchasableEntityInterface $entity, array $locations) {
     $this->purchasableEntity = $entity;
     $this->locations = $locations;
+    $this->context = $context;
   }
 
   /**

@@ -12,20 +12,6 @@ use Drupal\commerce\Context;
 interface StockLocationStorageInterface extends SqlEntityStorageInterface {
 
   /**
-   * Loads the enabled locations for the given Purchasable Entity.
-   *
-   * Enabled variations are active stock locations that have
-   * been filtered through the FILTER_STOCK_LOCATIONS event.
-   *
-   * @param \Drupal\commerce\PurchasableEntityInterface $entity
-   *   The purchasable entity.
-   *
-   * @return \Drupal\commerce_stock_local\Entity\StockLocation[]
-   *   The enabled stock locations.
-   */
-  public function loadEnabled(PurchasableEntityInterface $entity);
-
-  /**
    * Loads the relevant locations for the given Purchasable Entity and context.
    *
    * Relevant locations are active and available for fulfillment for the product
@@ -39,7 +25,7 @@ interface StockLocationStorageInterface extends SqlEntityStorageInterface {
    * @return \Drupal\commerce_stock_local\Entity\StockLocation[]
    *   The enabled stock locations.
    */
-  public function loadInContext(Context $context, PurchasableEntityInterface $entity);
+  public function loadFromContext(Context $context, PurchasableEntityInterface $entity);
 
   /**
    * Get the transaction location for the given product and context.

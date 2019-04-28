@@ -14,9 +14,15 @@ use Drupal\commerce\Context;
 class StockLocationStorage extends CommerceContentEntityStorage implements StockLocationStorageInterface {
 
   /**
-   * {@inheritdoc}
+   * Loads the enabled locations for the given Purchasable Entity.
+   *
+   * @param \Drupal\commerce\PurchasableEntityInterface $entity
+   *   The purchasable entity.
+   *
+   * @return \Drupal\commerce_stock_local\Entity\StockLocation[]
+   *   The enabled stock locations.
    */
-  public function loadEnabled(PurchasableEntityInterface $entity) {
+  private function loadEnabled(PurchasableEntityInterface $entity) {
     // Speed up loading by filtering out the IDs of disabled locations.
     $query = $this->getQuery()
       ->condition('status', TRUE);
@@ -24,20 +30,13 @@ class StockLocationStorage extends CommerceContentEntityStorage implements Stock
     if (empty($result)) {
       return [];
     }
-    $enabled_locations = $this->loadMultiple($result);
-
-    // Allow modules to apply own filtering.
-    $event = new FilterLocationsEvent($entity, $enabled_locations);
-    $this->eventDispatcher->dispatch(LocalStockEvents::FILTER_STOCK_LOCATIONS, $event);
-    $enabled_locations = $event->getLocations();
-
-    return $enabled_locations;
+    return $this->loadMultiple($result);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function loadInContext(Context $context, PurchasableEntityInterface $entity) {
+  public function loadFromContext(Context $context, PurchasableEntityInterface $entity) {
 
     $store = $context->getStore();
     // Make sure we have the availability field for the location.
@@ -87,7 +86,7 @@ class StockLocationStorage extends CommerceContentEntityStorage implements Stock
       $locations = $store->field_stock_allocation_location->getValue();
       if (empty($locations)) {
         // Allocation field is empty.
-        $locations = $this->loadInContext($context, $entity);
+        $locations = $this->loadFromContext($context, $entity);
         return empty($locations) ? NULL : array_shift($locations);
       }
       else {
@@ -98,9 +97,16 @@ class StockLocationStorage extends CommerceContentEntityStorage implements Stock
     }
     else {
       // No stock allocation field.
-      $locations = $this->loadInContext($context, $entity);
+      $locations = $this->loadFromContext($context, $entity);
       return empty($locations) ? NULL : array_shift($locations);
     }
+  }
+
+  private function filterLocations(Context $context, PurchasableEntityInterface $entity, $locations){
+    // Allow modules to apply own filtering.
+    $event = new FilterLocationsEvent($context, $entity, $locations);
+    $this->eventDispatcher->dispatch(LocalStockEvents::FILTER_STOCK_LOCATIONS, $event);
+    return $event->getLocations();
   }
 
 }
