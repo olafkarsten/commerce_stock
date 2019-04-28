@@ -25,3 +25,13 @@ services:
   plugin.manager.stock_events:
     class: Drupal\commerce_stock\Plugin\StockEventsManager
     parent: default_plugin_manager
+
+  commerce_stock.chain_transaction_location_resolver:
+    class: Drupal\commerce_stock\Resolver\ChainTransactionLocationResolver
+    tags:
+      - { name: service_collector, call: addResolver, tag: commerce_stock.transaction_location_resolver }
+
+  commerce_stock.chain_availability_location_resolver:
+    class: Drupal\commerce_stock\Resolver\ChainAvailabilityLocationResolver
+    tags:
+      - { name: service_colector, call: addResolver, tag: commerce_stock.availability_location_resolver }

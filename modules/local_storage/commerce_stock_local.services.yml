@@ -22,3 +22,15 @@ services:
       tags:
         - { name: module_install.uninstall_validator }
       arguments: ['@entity_type.manager', '@string_translation']
+
+  commerce_stock_local.availability_location_resolver:
+    class: Drupal\commerce_stock_local\Resolver\LocalStockAvailabilityLocationResolver
+    tags:
+      - {name: commerce_stock.availability_location_resolver, priority: -100 }
+    arguments: ['@entity_type.manager']
+
+  commerce_stock_local.transaction_location_resolver:
+    class: Drupal\commerce_stock_local\Resolver\LocalStockTransactionLocationResolver
+    tags:
+      - { name: commerce_stock.transaction_location_resolver, priority: -100 }
+    arguments: ['@entity_type.manager', '@commerce_stock.chain_availability_location_resolver']
