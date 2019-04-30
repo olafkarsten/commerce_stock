@@ -5,8 +5,12 @@ namespace Drupal\Tests\commerce_stock\Kernel;
 use Drupal\commerce\Context;
 use Prophecy\Argument;
 
-
-class ChainAvailabilityLocationResolverTest extends CommerceStockKernelTestBase{
+/**
+ * Class ChainAvailabilityLocationResolverTest.
+ *
+ * @group commerce_stock
+ */
+class ChainAvailabilityLocationResolverTest extends CommerceStockKernelTestBase {
 
   /**
    * {@inheritdoc}

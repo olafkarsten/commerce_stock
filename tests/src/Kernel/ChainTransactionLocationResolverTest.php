@@ -5,6 +5,9 @@ namespace Drupal\Tests\commerce_stock\Kernel;
 use Drupal\commerce\Context;
 use Prophecy\Argument;
 
+/**
+ * @group commerce_stock
+ */
 class ChainTransactionLocationResolverTest extends CommerceStockKernelTestBase {
 
   /**
@@ -27,7 +30,7 @@ class ChainTransactionLocationResolverTest extends CommerceStockKernelTestBase {
     $resolverOne = $prophecy->reveal();
 
     $prophecy = $this->prophesize('Drupal\commerce_stock\Resolver\TransactionLocationResolverInterface');
-    $prophecy->resolve(Argument::type('Drupal\commerce\PurchasableEntityInterface'), Argument::type('Drupal\commerce\Context'), Argument::any())
+    $prophecy->resolve(Argument::type('Drupal\commerce\PurchasableEntityInterface'), Argument::any(), Argument::type('Drupal\commerce\Context'))
       ->willReturn('TESTRESULT');
     $resolverTwo = $prophecy->reveal();
 
@@ -42,7 +45,7 @@ class ChainTransactionLocationResolverTest extends CommerceStockKernelTestBase {
     $user = $this->createUser();
     $context = new Context($user, $this->store);
 
-    self::assertEquals($chainResolver->resolve($purchasableEntity, $context, 3), 'TESTRESULT');
+    self::assertEquals($chainResolver->resolve($purchasableEntity, 3, $context), 'TESTRESULT');
 
     $resolvers = $chainResolver->getResolvers();
     self::assertTrue(in_array($resolverOne, $resolvers));

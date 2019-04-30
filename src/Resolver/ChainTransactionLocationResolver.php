@@ -46,11 +46,11 @@ class ChainTransactionLocationResolver implements ChainTransactionLocationResolv
    */
   public function resolve(
     PurchasableEntityInterface $entity,
-    Context $context,
-    $quantity
+    $quantity,
+    Context $context
   ) {
     foreach ($this->resolvers as $resolver) {
-      $result = $resolver->resolve($entity, $context, $quantity);
+      $result = $resolver->resolve($entity, $quantity, $context);
       if ($result) {
         return $result;
       }

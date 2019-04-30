@@ -211,6 +211,8 @@ class LocalStockChecker implements StockCheckInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @deprecated will be removed before first release. Use the
    */
   public function getLocationList($return_active_only = TRUE) {
 

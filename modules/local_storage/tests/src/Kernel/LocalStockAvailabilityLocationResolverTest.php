@@ -1,9 +1,4 @@
 <?php
-/**
- * This file is part of the commerce_contrib package.
- *
- * @author Olaf Karsten <olaf.karsten@beckerundkarsten.de>
- */
 
 namespace Drupal\Tests\commerce_stock_local\Kernel;
 
@@ -13,6 +8,7 @@ use Drupal\Tests\commerce_stock\Kernel\CommerceStockKernelTestBase;
 
 /**
  * @coversDefaultClass \Drupal\commerce_stock_local\Resolver\LocalStockAvailabilityLocationResolver
+ * @group commerce_stock
  */
 class LocalStockAvailabilityLocationResolverTest extends CommerceStockKernelTestBase {
 

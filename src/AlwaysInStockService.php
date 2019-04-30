@@ -34,7 +34,7 @@ class AlwaysInStockService implements StockServiceInterface {
   public function __construct() {
     $this->stockChecker = new AlwaysInStock();
     $this->stockUpdater = $this->stockChecker;
-    $this->stockServiceConfig = new StockServiceConfig($this->stockChecker);
+    $this->stockServiceConfig = \Drupal::getContainer()->get('commerce_stock.default_stock_service_config');
   }
 
   /**

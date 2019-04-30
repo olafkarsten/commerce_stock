@@ -88,7 +88,7 @@ class EnforcementBrowserTest extends EnforcementBrowserTestBase {
       ->getConfiguration();
 
     $context = new Context($this->adminUser, $this->store);
-    $this->locations = $stockServiceConfiguration->getAvailabilityLocations($context, $this->variation);
+    $this->locations = $stockServiceConfiguration->getAvailabilityLocations($this->variation, $context);
     // Set initial Stock level.
     $this->stockServiceManager->createTransaction($this->variation, $this->locations[1]->getId(), '', 1, 12.12, 'USD', StockTransactionsInterface::STOCK_IN, []);
   }

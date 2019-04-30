@@ -23,4 +23,5 @@ interface AvailabilityLocationResolverInterface {
    *   Otherwise NULL, indicating that the next resolver in the chain should be called.
    */
   public function resolve(PurchasableEntityInterface $entity, Context $context);
+
 }

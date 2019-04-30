@@ -8,7 +8,10 @@ use Drupal\commerce_stock\Resolver\AvailabilityLocationResolverInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 
 /**
- * Returns the active local stock locations, if known.
+ * Provides the default availability location resolver for the
+ * commerce stock local storage module.
+ *
+ * Returns the active local stock locations.
  */
 class LocalStockAvailabilityLocationResolver implements AvailabilityLocationResolverInterface {
 
@@ -72,4 +75,5 @@ class LocalStockAvailabilityLocationResolver implements AvailabilityLocationReso
 
     return $this->storage->loadEnabled($entity);
   }
+
 }

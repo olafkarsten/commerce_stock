@@ -200,8 +200,8 @@ class OrderEventsTransactionsTest extends CommerceStockKernelTestBase {
       ->getConfiguration();
 
     $context = new Context($user, $this->store);
-    $this->locations = $stockServiceConfiguration->getAvailabilityLocations($context, $this->variation);
-    $this->locations2 = $stockServiceConfiguration2->getAvailabilityLocations($context, $this->variation2);
+    $this->locations = $stockServiceConfiguration->getAvailabilityLocations($this->variation, $context);
+    $this->locations2 = $stockServiceConfiguration2->getAvailabilityLocations($this->variation2, $context);
 
     // Set initial Stock level.
     $stockServiceManager->createTransaction($this->variation, $this->locations[1]->getId(), '', 10, 10.10, 'USD', StockTransactionsInterface::STOCK_IN, []);

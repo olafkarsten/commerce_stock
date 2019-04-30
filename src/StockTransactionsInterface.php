@@ -53,17 +53,17 @@ interface StockTransactionsInterface {
    * StockServiceConfigInterface getTransactionLocation() and is provided as a
    * util function.
    *
-   * @param \Drupal\commerce\Context $context
-   *   The context containing the customer & store.
    * @param \Drupal\commerce\PurchasableEntityInterface $entity
    *   The purchasable entity (most likely a product variation entity).
    * @param int $quantity
    *   The quantity.
+   * @param \Drupal\commerce\Context $context
+   *   The context containing the customer & store.
    *
    * @return \Drupal\commerce_stock\StockLocationInterface
    *   The stock location.
    */
-  public function getTransactionLocation(Context $context, PurchasableEntityInterface $entity, $quantity);
+  public function getTransactionLocation(PurchasableEntityInterface $entity, $quantity, Context $context);
 
   /**
    * Create a transaction.

@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_stock;
 
-use Drupal\commerce\PurchasableEntityInterface;
 use Drupal\commerce\Context;
+use Drupal\commerce\PurchasableEntityInterface;
 
 /**
  * The stock service configuration interface.
@@ -17,17 +17,21 @@ interface StockServiceConfigInterface {
    * This can also be a location worked out in realtime using the provided
    * context (order & customer), entity and the quantity requested.
    *
-   * @param \Drupal\commerce\Context $context
-   *   The context containing the customer & store.
    * @param \Drupal\commerce\PurchasableEntityInterface $entity
    *   The purchasable entity.
    * @param int $quantity
    *   The quantity.
+   * @param \Drupal\commerce\Context $context
+   *   The context containing the customer & store.
    *
    * @return \Drupal\commerce_stock\StockLocationInterface
    *   The stock location.
    */
-  public function getTransactionLocation(Context $context, PurchasableEntityInterface $entity, $quantity);
+  public function getTransactionLocation(
+    PurchasableEntityInterface $entity,
+    $quantity,
+    Context $context
+  );
 
   /**
    * Get locations holding stock.
@@ -35,14 +39,17 @@ interface StockServiceConfigInterface {
    * The locations should be filtered for the provided context and purchasable
    * entity.
    *
-   * @param \Drupal\commerce\Context $context
-   *   The context containing the customer & store.
    * @param \Drupal\commerce\PurchasableEntityInterface $entity
    *   The purchasable entity.
+   * @param \Drupal\commerce\Context $context
+   *   The context containing the customer & store.
    *
    * @return \Drupal\commerce_stock\StockLocationInterface[]
-   *   List of relevant locations.
+   *   An array of availibility locations.
    */
-  public function getAvailabilityLocations(Context $context, PurchasableEntityInterface $entity);
+  public function getAvailabilityLocations(
+    PurchasableEntityInterface $entity,
+    Context $context
+  );
 
 }
