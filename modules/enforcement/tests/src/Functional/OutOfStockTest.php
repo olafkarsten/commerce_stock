@@ -40,7 +40,9 @@ class OutOfStockTest extends EnforcementBrowserTestBase {
    * Test that the out of stock button is displayed.
    */
   public function testOutOfStock() {
-    $this->stockServiceManager->createTransaction($this->variation, $this->locations[1]->getId(), '', -10, 12.12, 'USD', StockTransactionsInterface::STOCK_IN, []);
+    $this->stockServiceManager->getService($this->variation)
+      ->getStockUpdater()
+      ->createTransaction($this->variation, $this->locations[1]->getId(), '', -10, StockTransactionsInterface::STOCK_OUT, $this->adminUser->id(), NULL, NULL, 12.12, 'USD', []);
     $this->drupalGet('product/' . $this->product->id());
     $this->assertSession()->buttonExists('Out of stock');
   }
@@ -90,7 +92,9 @@ class OutOfStockTest extends EnforcementBrowserTestBase {
     $context = new Context($this->adminUser, $this->store);
     $this->locations = $stockServiceConfiguration->getAvailabilityLocations($context, $this->variation);
     // Set initial Stock level.
-    $this->stockServiceManager->createTransaction($this->variation, $this->locations[1]->getId(), '', 1, 12.12, 'USD', StockTransactionsInterface::STOCK_IN, []);
+    $this->stockServiceManager->getService($this->variation)
+      ->getStockUpdater()
+      ->createTransaction($this->variation, $this->locations[1]->getId(), '', 1, StockTransactionsInterface::STOCK_IN, $this->adminUser->id(), NULL, NULL, 12.12, 'USD', []);
   }
 
 }

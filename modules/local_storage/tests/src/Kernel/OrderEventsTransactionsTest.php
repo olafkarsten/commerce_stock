@@ -204,8 +204,8 @@ class OrderEventsTransactionsTest extends CommerceStockKernelTestBase {
     $this->locations2 = $stockServiceConfiguration2->getAvailabilityLocations($context, $this->variation2);
 
     // Set initial Stock level.
-    $stockServiceManager->createTransaction($this->variation, $this->locations[1]->getId(), '', 10, 10.10, 'USD', StockTransactionsInterface::STOCK_IN, []);
-    $stockServiceManager->createTransaction($this->variation2, $this->locations2[1]->getId(), '', 11, 11.11, 'USD', StockTransactionsInterface::STOCK_IN, []);
+    $stockServiceManager->getService($this->variation)->getStockUpdater()->createTransaction($this->variation, $this->locations[1]->getId(), '', 10, StockTransactionsInterface::STOCK_IN, $this->user->id(), NULL, NULL, 10.10, 'USD', []);
+    $stockServiceManager->getService($this->variation2)->getStockUpdater()->createTransaction($this->variation2, $this->locations2[1]->getId(), '', 11, StockTransactionsInterface::STOCK_IN, $this->user->id(), NULL, NULL, 11.11, 'USD', []);
 
     $profile = Profile::create([
       'type' => 'customer',
@@ -233,8 +233,8 @@ class OrderEventsTransactionsTest extends CommerceStockKernelTestBase {
       ->getStorage('commerce_order_item');
 
     $order_item2 = OrderItem::create([
-      'type'       => 'default',
-      'quantity'   => 2,
+      'type' => 'default',
+      'quantity' => 2,
       'unit_price' => new Price('12.00', 'USD'),
     ]);
     $order_item2->save();
@@ -283,7 +283,7 @@ class OrderEventsTransactionsTest extends CommerceStockKernelTestBase {
     $this->assertEquals($this->order->id(), $result[0]->related_oid);
     $this->assertEquals($this->order->getCustomerId(), $result[0]->related_uid);
     $this->assertEquals('-1.00', $result[0]->qty);
-    $this->assertEquals('order placed', unserialize($result[0]->data)['message']);
+    $this->assertEquals('order placed', unserialize($result[0]->data)['data']['message']);
   }
 
   /**
@@ -356,7 +356,7 @@ class OrderEventsTransactionsTest extends CommerceStockKernelTestBase {
     $this->assertEquals($this->order->id(), $result[0]->related_oid);
     $this->assertEquals($this->order->getCustomerId(), $result[0]->related_uid);
     $this->assertEquals('1.00', $result[0]->qty);
-    $this->assertEquals('order canceled', unserialize($result[0]->data)['message']);
+    $this->assertEquals('order canceled', unserialize($result[0]->data)['data']['message']);
     $this->assertEquals(10, $this->checker->getTotalStockLevel($this->variation, $this->locations));
   }
 
@@ -486,12 +486,15 @@ class OrderEventsTransactionsTest extends CommerceStockKernelTestBase {
     $this->assertEquals($this->order->id(), $result[0]->related_oid);
     $this->assertEquals($this->order->getCustomerId(), $result[0]->related_uid);
     $this->assertEquals('-3.00', $result[0]->qty);
-    $this->assertEquals('order item added', unserialize($result[0]->data)['message']);
+    $this->assertEquals('order item added', unserialize($result[0]->data)['data']['message']);
 
     // Tests the order item update event.
     $items = $this->order->getItems();
     $items[0]->setQuantity('3')->save();
-    $this->order->save();
+    $testresult = $this->order->save();
+    $query = \Drupal::database()->select('commerce_stock_transaction', 'txn')
+      ->fields('txn');
+    $resulttest = $query->execute()->fetchAll();
     $query = \Drupal::database()->select('commerce_stock_transaction', 'txn')
       ->fields('txn')
       ->condition('entity_id', $this->variation->id())
@@ -503,7 +506,7 @@ class OrderEventsTransactionsTest extends CommerceStockKernelTestBase {
     $this->assertEquals($this->order->id(), $result[1]->related_oid);
     $this->assertEquals($this->order->getCustomerId(), $result[1]->related_uid);
     $this->assertEquals('-2.00', $result[1]->qty);
-    $this->assertEquals('order item quantity updated', unserialize($result[1]->data)['message']);
+    $this->assertEquals('order item quantity updated', unserialize($result[1]->data)['data']['message']);
     $this->assertEquals(7, $this->checker->getTotalStockLevel($this->variation, $this->locations));
 
     // Tests the order item delete event.
@@ -521,7 +524,7 @@ class OrderEventsTransactionsTest extends CommerceStockKernelTestBase {
     $this->assertEquals($this->order->id(), $result[0]->related_oid);
     $this->assertEquals($this->order->getCustomerId(), $result[0]->related_uid);
     $this->assertEquals('3.00', $result[0]->qty);
-    $this->assertEquals('order item deleted', unserialize($result[0]->data)['message']);
+    $this->assertEquals('order item deleted', unserialize($result[0]->data)['data']['message']);
     $this->assertEquals(10, $this->checker->getTotalStockLevel($this->variation, $this->locations));
 
     // Tests the order delete event.
@@ -537,7 +540,7 @@ class OrderEventsTransactionsTest extends CommerceStockKernelTestBase {
     $this->assertEquals($this->order->id(), $result[0]->related_oid);
     $this->assertEquals($this->order->getCustomerId(), $result[0]->related_uid);
     $this->assertEquals('3.00', $result[0]->qty);
-    $this->assertEquals('order deleted', unserialize($result[0]->data)['message']);
+    $this->assertEquals('order deleted', unserialize($result[0]->data)['data']['message']);
     $this->assertEquals(10, $this->checker->getTotalStockLevel($this->variation, $this->locations));
     $this->assertEquals(11, $this->checker2->getTotalStockLevel($this->variation2, $this->locations2));
   }

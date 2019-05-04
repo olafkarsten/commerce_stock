@@ -129,7 +129,9 @@ class StockLevelTest extends CommerceStockKernelTestBase {
 
     $user = $this->createUser(['mail' => $this->randomString() . '@example.com']);
 
-    $this->stockServiceManager->createTransaction($this->variation, 1, '', 55, 0, 'EUR', StockTransactionsInterface::STOCK_IN);
+    $this->stockServiceManager->getService($this->variation)
+      ->getStockUpdater()
+      ->createTransaction($this->variation, 1, '', 55, StockTransactionsInterface::STOCK_IN, $user->id(), NULL, NULL, 0, 'EUR', []);
 
     $this->checker = $this->stockServiceManager->getService($this->variation)
       ->getStockChecker();

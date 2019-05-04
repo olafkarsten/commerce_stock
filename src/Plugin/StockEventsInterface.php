@@ -41,16 +41,19 @@ interface StockEventsInterface extends PluginInspectionInterface {
    *   The stock location.
    * @param int $transaction_type
    *   The transaction type ID.
+   * @param string|int|null $orderId
+   *   The commerce order identifier or NULL.
    * @param array $metadata
    *   Holds all the optional values those are:
-   *     - related_oid: related order.
-   *     - related_uid: related user.
+   *     - related_tid: related transaction.
+   *     - unit_cost: unit cost.
+   *     - currency: the currency of the unit cost.
    *     - data: Serialized data array holding a message.
    *
    * @return int
    *   Return the ID of the transaction or FALSE if no transaction created.
    */
-  public function stockEvent(Context $context, PurchasableEntityInterface $entity, $stockEvent, $quantity, StockLocationInterface $location, $transaction_type, array $metadata);
+  public function stockEvent(Context $context, PurchasableEntityInterface $entity, $stockEvent, $quantity, StockLocationInterface $location, $transaction_type, $orderId = NULL, array $metadata = []);
 
   /**
    * Return form elements holding the configuration options.

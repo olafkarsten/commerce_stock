@@ -1,0 +1,6 @@
+commerce_stock_test.transactions_types:
+  path: '/admin/commerce/config/stock/test/transactiontypes'
+  defaults:
+    _form: '\Drupal\commerce_stock_test\Form\TransactionsTypesPluginsTestForm'
+  requirements:
+    _access: 'TRUE'

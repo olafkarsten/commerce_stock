@@ -1,0 +1,4 @@
+services:
+  plugin.manager.stock_transaction_type_form:
+    class: Drupal\commerce_stock_ui\Plugin\StockTransactionTypeFormManager
+    parent: default_plugin_manager
