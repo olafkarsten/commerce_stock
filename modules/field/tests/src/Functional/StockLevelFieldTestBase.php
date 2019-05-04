@@ -28,7 +28,6 @@ abstract class StockLevelFieldTestBase extends StockBrowserTestBase {
    */
   public static $modules = [
     'commerce_stock_field',
-    'commerce_stock_ui',
     'commerce_stock_local',
   ];
 

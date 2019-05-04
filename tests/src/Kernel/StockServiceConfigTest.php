@@ -4,16 +4,17 @@ namespace Drupal\Tests\commerce_stock\Kernel;
 
 use Drupal\commerce\Context;
 use Drupal\commerce\PurchasableEntityInterface;
-use Drupal\commerce_stock\StockCheckInterface;
+use Drupal\commerce_stock\Resolver\ChainAvailabilityLocationResolverInterface;
+use Drupal\commerce_stock\Resolver\ChainTransactionLocationResolverInterface;
 use Drupal\commerce_stock\StockLocationInterface;
-use Drupal\commerce_stock\StockServiceConfig;
+use Drupal\commerce_stock\DefaultStockServiceConfig;
 use Drupal\Tests\PhpunitCompatibilityTrait;
 use Prophecy\Argument;
 
 /**
  * Tests the stock service configuration.
  *
- * @coversDefaultClass \Drupal\commerce_stock\StockServiceConfig
+ * @coversDefaultClass \Drupal\commerce_stock\DefaultStockServiceConfig
  *
  * @group commerce_stock
  */
@@ -31,7 +32,6 @@ class StockServiceConfigTest extends CommerceStockKernelTestBase {
 
   /**
    * @covers ::getAvailabilityLocations
-   * @covers ::loadConfiguration
    * @covers ::getTransactionLocation
    */
   public function testLocalStockService() {
@@ -45,11 +45,15 @@ class StockServiceConfigTest extends CommerceStockKernelTestBase {
       $locations[] = $prophecy->reveal();
     }
 
-    $prophecy = $this->prophesize(StockCheckInterface::class);
-    $prophecy->getLocationList(Argument::is(TRUE))->willReturn($locations);
-    $stockChecker = $prophecy->reveal();
+    $prophecy = $this->prophesize(ChainAvailabilityLocationResolverInterface::class);
+    $prophecy->resolve(Argument::any(), Argument::any())->willReturn($locations);
+    $chainAvailabilityResolver = $prophecy->reveal();
 
-    $stockServiceConfig = new StockServiceConfig($stockChecker);
+    $prophecy = $this->prophesize(ChainTransactionLocationResolverInterface::class);
+    $prophecy->resolve(Argument::any(), Argument::any(), Argument::any())->willReturn($locations[1]);
+    $chainResolver = $prophecy->reveal();
+
+    $stockServiceConfig = new DefaultStockServiceConfig($chainAvailabilityResolver, $chainResolver);
 
     $prophecy = $this->prophesize(PurchasableEntityInterface::class);
     $entity = $prophecy->reveal();
@@ -58,17 +62,17 @@ class StockServiceConfigTest extends CommerceStockKernelTestBase {
     $context = new Context($user, $store);
 
     // Wheter we get only active locations back.
-    $locations = $stockServiceConfig->getAvailabilityLocations($context, $entity);
+    $locations = $stockServiceConfig->getAvailabilityLocations($entity, $context);
     foreach ($locations as $location) {
       self::assertInstanceOf('Drupal\commerce_stock\StockLocationInterface', $location);
       self::assertTrue($location->isActive());
     }
-    self::assertEquals(3, count($locations), 'Only active locations are returned from StockServiceConfig::getAvailabilityLocations()');
+    self::assertEquals(3, count($locations), 'Only active locations are returned from DefaultStockServiceConfig::getAvailabilityLocations()');
 
     // Whether a active location entity is returned.
-    $primary = $stockServiceConfig->getTransactionLocation($context, $entity, 1);
+    $primary = $stockServiceConfig->getTransactionLocation($entity, 1, $context);
     self::assertInstanceOf('Drupal\commerce_stock\StockLocationInterface', $primary);
-    self::assertTrue($primary->isActive(), 'Active location is returned from StockServiceConfig::getTransactionLocation()');
+    self::assertTrue($primary->isActive(), 'Active location is returned from DefaultStockServiceConfig::getTransactionLocation()');
 
   }
 

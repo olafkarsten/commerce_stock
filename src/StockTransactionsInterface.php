@@ -2,6 +2,9 @@
 
 namespace Drupal\commerce_stock;
 
+use Drupal\commerce\PurchasableEntityInterface;
+use Drupal\commerce\Context;
+
 /**
  * Defines a common interface for creating stock transactions.
  */

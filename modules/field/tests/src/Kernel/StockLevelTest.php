@@ -139,7 +139,7 @@ class StockLevelTest extends CommerceStockKernelTestBase {
       ->getConfiguration();
     $context = new Context($user, $this->store);
 
-    $this->locations = $this->stockServiceConfiguration->getAvailabilityLocations($context, $this->variation);
+    $this->locations = $this->stockServiceConfiguration->getAvailabilityLocations($this->variation, $context);
   }
 
   /**

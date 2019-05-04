@@ -1,0 +1,11 @@
+services:
+  commerce_stock_local.test_availability_location_resolver:
+    class: Drupal\commerce_stock_local_test\Resolver\TestLocalStockAvailabilityLocationResolver
+    tags:
+      - {name: commerce_stock.availability_location_resolver, priority: 50 }
+
+  commerce_stock_local.test_transaction_location_resolver:
+    class: Drupal\commerce_stock_local_test\Resolver\TestLocalStockTransactionLocationResolver
+    tags:
+      - { name: commerce_stock.transaction_location_resolver, priority: 50 }
+    arguments: ['@commerce_stock.chain_availability_location_resolver']
