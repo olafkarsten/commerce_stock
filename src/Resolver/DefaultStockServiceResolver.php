@@ -4,6 +4,7 @@ namespace Drupal\commerce_stock\Resolver;
 
 use Drupal\commerce\Context;
 use Drupal\commerce\PurchasableEntityInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 
 /**
@@ -34,10 +35,11 @@ class DefaultStockServiceResolver implements StockServiceResolverInterface {
   public function resolve(
     PurchasableEntityInterface $entity,
     Context $context,
-    $quantity = NULL
+    $quantity = NULL,
+    OrderInterface $order = NULL
   ) {
-    $active_services = $this->storage->loadByProperties(['active' => TRUE]);
     // @todo Consider more than the 'active' property... consider weight, config.
+    $active_services = $this->storage->loadByProperties(['active' => TRUE]);
     return reset($active_services);
   }
 }

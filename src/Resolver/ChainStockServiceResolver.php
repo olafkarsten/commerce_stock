@@ -4,6 +4,7 @@ namespace Drupal\commerce_stock\Resolver;
 
 use Drupal\commerce\Context;
 use Drupal\commerce\PurchasableEntityInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
 
 /**
  * Chain stock service resolver.
@@ -47,7 +48,8 @@ class ChainStockServiceResolver implements ChainStockServiceResolverInterface {
   public function resolve(
     PurchasableEntityInterface $entity,
     Context $context,
-    $quantity = NULL
+    $quantity = NULL,
+    OrderInterface $order = NULL
   ) {
     foreach ($this->resolvers as $resolver) {
       $result = $resolver->resolve($entity, $context, $quantity);

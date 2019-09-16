@@ -162,7 +162,6 @@ class StockTransactionForm extends FormBase {
       '#value' => $this->t('Select variation'),
       '#weight' => 100,
       '#submit' => ['::firstStepSubmit'],
-
     ];
 
     // We first need the purchasable entity, before we can build the entire form.

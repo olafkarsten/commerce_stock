@@ -2,6 +2,10 @@
 
 namespace Drupal\commerce_stock\Plugin\Commerce\StockService;
 
+use Drupal\commerce\Context;
+use Drupal\commerce\PurchasableEntityInterface;
+use Drupal\commerce_stock\Resolver\ChainAvailabilityLocationResolverInterface;
+use Drupal\commerce_stock\Resolver\ChainTransactionLocationResolverInterface;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -32,6 +36,20 @@ abstract class StockServiceBase extends PluginBase implements StockServiceInterf
   protected $entityId;
 
   /**
+   * The chain availability location resolver.
+   *
+   * @var Drupal\commerce_stock\Resolver\ChainAvailabilityLocationResolverInterface
+   */
+  protected $chain_transaction_location_resolver;
+
+  /**
+   * The chain transaction location resolver.
+   *
+   * @var Drupal\commerce_stock\Resolver\TransactionLocationResolverInterface
+   */
+  protected $chain_availability_location_resolver;
+
+  /**
    * Constructs a new StockServiceBase object.
    *
    * @param array $configuration
@@ -42,12 +60,18 @@ abstract class StockServiceBase extends PluginBase implements StockServiceInterf
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
+   * @param \Drupal\commerce_stock\Resolver\ChainAvailabilityLocationResolverInterface $chain_availability_location_resolver
+   *   A chain availability location resolver.
+   * @param \Drupal\commerce_stock\Resolver\ChainTransactionLocationResolverInterface $chain_transaction_location_resolver
+   *   A chain transaction location resolver.
    */
   public function __construct(
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    EntityTypeManagerInterface $entity_type_manager
+    EntityTypeManagerInterface $entity_type_manager,
+    ChainAvailabilityLocationResolverInterface $chain_availability_location_resolver,
+    ChainTransactionLocationResolverInterface $chain_transaction_location_resolver
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityTypeManager = $entity_type_manager;
@@ -56,6 +80,8 @@ abstract class StockServiceBase extends PluginBase implements StockServiceInterf
       unset($configuration['_entity_id']);
     }
     $this->setConfiguration($configuration);
+    $this->chain_availability_location_resolver = $chain_availability_location_resolver;
+    $this->chain_transaction_location_resolver = $chain_availability_location_resolver;
   }
 
   /**
@@ -71,7 +97,9 @@ abstract class StockServiceBase extends PluginBase implements StockServiceInterf
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('commerce_stock.chain_availability_location_resolver'),
+      $container->get('ommerce_stock.chain_transaction_location_resolver')
     );
   }
 
@@ -80,6 +108,13 @@ abstract class StockServiceBase extends PluginBase implements StockServiceInterf
    */
   public function getLabel() {
     return $this->pluginDefinition['label'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDisplayLabel(){
+    return $this->pluginDefinition['display_label'];
   }
 
   /**
@@ -137,5 +172,28 @@ abstract class StockServiceBase extends PluginBase implements StockServiceInterf
     FormStateInterface $form_state
   ) {
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAvailabilityLocations(
+    PurchasableEntityInterface $entity,
+    Context $context
+  ) {
+    return $this->chain_availability_location_resolver->resolve($entity, $context);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTransactionLocation(
+    PurchasableEntityInterface $entity,
+    $quantity,
+    Context $context
+  ) {
+    return $this->chain_transaction_location_resolver->resolve($entity, $quantity, $context);
+  }
+
+
 
 }

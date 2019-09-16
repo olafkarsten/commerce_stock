@@ -15,24 +15,24 @@ use Drupal\Core\Plugin\PluginWithFormsInterface;
 interface StockServiceInterface extends PluginWithFormsInterface, ConfigurablePluginInterface, PluginFormInterface, DerivativeInspectionInterface {
 
   /**
-   * Gets the stock service name.
+   * Gets the stock service label.
    *
    * The label is admin-facing and usually includes the name of the used API.
-   * For example: "Local storage".
+   * For example: "Local storage (Drupal/SQL)".
    *
    * @return mixed
    *   The stock service name.
    */
-  public function getName();
+  public function getLabel();
 
   /**
    * Gets the stock service display label.
    *
    * The display label is customer-facing and more generic.
-   * For example: "Commerce stock local stock storage".
+   * For example: "Commerce stock local storage".
    *
    * @return string
-   *   The payment gateway display label.
+   *   The stock service display label.
    */
   public function getDisplayLabel();
 
@@ -59,17 +59,22 @@ interface StockServiceInterface extends PluginWithFormsInterface, ConfigurablePl
    * This can also be a location worked out in realtime using the provided
    * context (order & customer), entity and the quantity requested.
    *
-   * @param \Drupal\commerce\Context $context
-   *   The context containing the customer & store.
    * @param \Drupal\commerce\PurchasableEntityInterface $entity
    *   The purchasable entity.
    * @param int $quantity
    *   The quantity.
    *
+   * @param \Drupal\commerce\Context $context
+   *   The context containing the customer & store.
+   *
    * @return \Drupal\commerce_stock\StockLocationInterface|null
    *   The stock location, or null if none is available.
    */
-  public function getTransactionLocation(Context $context, PurchasableEntityInterface $entity, $quantity);
+  public function getTransactionLocation(
+    PurchasableEntityInterface $entity,
+    $quantity,
+    Context $context
+  );
 
   /**
    * Get locations holding stock.
@@ -77,14 +82,18 @@ interface StockServiceInterface extends PluginWithFormsInterface, ConfigurablePl
    * The locations should be filtered for the provided context and purchasable
    * entity.
    *
-   * @param \Drupal\commerce\Context $context
-   *   The context containing the customer & store.
    * @param \Drupal\commerce\PurchasableEntityInterface $entity
    *   The purchasable entity.
+   *
+   * @param \Drupal\commerce\Context $context
+   *   The context containing the customer & store.
    *
    * @return \Drupal\commerce_stock\StockLocationInterface[]
    *   List of relevant locations.
    */
-  public function getAvailabilityLocations(Context $context, PurchasableEntityInterface $entity);
+  public function getAvailabilityLocations(
+    PurchasableEntityInterface $entity,
+    Context $context
+  );
 
 }

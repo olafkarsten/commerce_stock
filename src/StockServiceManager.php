@@ -2,10 +2,9 @@
 
 namespace Drupal\commerce_stock;
 
+use Drupal\commerce\Context;
 use Drupal\commerce\PurchasableEntityInterface;
-use Drupal\commerce_store\CurrentStoreInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Session\AccountInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
 
 /**
  * The stock service manager.
@@ -18,98 +17,46 @@ use Drupal\Core\Session\AccountInterface;
  */
 class StockServiceManager implements StockServiceManagerInterface {
 
-  use ContextCreatorTrait;
-
   /**
-   * The stock services.
+   * The entity type manager.
    *
-   * @var \Drupal\commerce_stock\StockServiceInterface[]
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $stockServices = [];
+  protected $entityTypeManager;
 
   /**
-   * The config factory.
+   * The chain stock service resolver.
    *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   * @var \Drupal\commerce_stock\Resolver\ChainStockServiceResolverInterface
    */
-  protected $configFactory;
+  protected $chainStockServiceResolver;
 
   /**
-   * The current store.
+   * Constructs a new StockServiceManager object.
    *
-   * @var \Drupal\commerce_store\Entity\Store
-   */
-  protected $currentStore;
-
-  /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Session\AccountInterface
-   */
-  protected $currentUser;
-
-  /**
-   * Constructs a StockServiceManager object.
-   *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The config factory.
-   * @param \Drupal\commerce_store\CurrentStoreInterface $current_store
-   *   The current store.
-   * @param \Drupal\Core\Session\AccountInterface $current_user
-   *   The current user.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   * @param \Drupal\commerce_stock\Resolver\ChainStockServiceResolverInterface $chain_stock_service_resolver
+   *   The chain checkout flow resolver.
    */
   public function __construct(
-    ConfigFactoryInterface $config_factory,
-    CurrentStoreInterface $current_store,
-    AccountInterface $current_user
+    EntityTypeManagerInterface $entity_type_manager,
+    ChainStockServiceResolverInterface $chain_stock_service_resolver
   ) {
-    $this->configFactory = $config_factory;
-    $this->currentStore = $current_store;
-    $this->currentUser = $current_user;
+    $this->entityTypeManager = $entity_type_manager;
+    $this->chainStockServiceResolver = $chain_stock_service_resolver;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function addService(StockServiceInterface $stock_service) {
-    $this->stockServices[$stock_service->getId()] = $stock_service;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getService(PurchasableEntityInterface $entity) {
-    $config = $this->configFactory->get('commerce_stock.service_manager');
-
-    $default_service_id = $config->get('default_service_id');
-
-    $entity_type = $entity->getEntityTypeId();
-    $entity_bundle = $entity->bundle();
-    $entity_config_key = $entity_type . '_' . $entity_bundle . '_service_id';
-    $entity_service_id = $config->get($entity_config_key);
-
-    $service_id = $entity_service_id ?: $default_service_id;
-
-    return $this->stockServices[$service_id];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function listServices() {
-    return $this->stockServices;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function listServiceIds() {
-    $ids = [];
-    foreach ($this->stockServices as $service) {
-      $ids[$service->getId()] = $service->getName();
-    }
-
-    return $ids;
+  public function getService(
+    PurchasableEntityInterface $entity,
+    Context $context,
+    $quantity = NULL,
+    OrderInterface $order = NULL
+  ) {
+    return $this->chainStockServiceResolver->resolve($entity, $context, $quantity, $order);
   }
 
 }
