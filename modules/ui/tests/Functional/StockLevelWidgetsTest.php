@@ -40,7 +40,7 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
     $this->assertSession()->linkExists(t('transaction form'));
     $this->clickLink(t('transaction form'));
     $this->assertSession()->statusCodeEquals(200);
-    $path = '/admin/commerce/config/stock/transactions2';
+    $path = '/admin/commerce/config/stock/transactions';
     $this->assertSession()->addressEquals($path);
   }
 

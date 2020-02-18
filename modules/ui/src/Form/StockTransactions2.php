@@ -3,6 +3,7 @@
 namespace Drupal\commerce_stock_ui\Form;
 
 use Drupal\commerce_product\ProductVariationStorage;
+use Drupal\commerce_stock\ContextCreatorTrait;
 use Drupal\commerce_stock\StockServiceManager;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -13,6 +14,8 @@ use Symfony\Component\HttpFoundation\Request;
  * The second part of a two part create stock transaction form.
  */
 class StockTransactions2 extends FormBase {
+
+  use ContextCreatorTrait;
 
   /**
    * The product variation storage.
@@ -92,8 +95,9 @@ class StockTransactions2 extends FormBase {
     }
 
     $product_variation = $this->productVariationStorage->load($variation_id);
+    $context = $this->getContext($product_variation);
     $stockService = $this->stockServiceManager->getService($product_variation);
-    $locations = $stockService->getStockChecker()->getLocationList(TRUE);
+    $locations = $stockService->getConfiguration()->getAvailabilityLocations($context, $product_variation);
     $location_options = [];
     /** @var \Drupal\commerce_stock\StockLocationInterface $location */
     foreach ($locations as $location) {

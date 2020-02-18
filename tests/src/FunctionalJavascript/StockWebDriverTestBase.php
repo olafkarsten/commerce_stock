@@ -168,14 +168,6 @@ abstract class StockWebDriverTestBase extends WebDriverTestBase {
   }
 
   /**
-   * Waits for jQuery to become active and animations to complete.
-   */
-  protected function waitForAjaxToFinish() {
-    $condition = "(0 === jQuery.active && 0 === jQuery(':animated').length)";
-    $this->assertJsCondition($condition, 10000);
-  }
-
-  /**
    * {@inheritdoc}
    *
    * @return \Drupal\FunctionalJavascriptTests\JSWebAssert

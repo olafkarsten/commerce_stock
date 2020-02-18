@@ -125,6 +125,9 @@ class OrderEventSubscriber implements EventSubscriberInterface {
     $eventType = $this->getEventType('commerce_stock_order_update');
     $order = $event->getOrder();
     $original_order = $this->getOriginalEntity($order);
+    if (!$original_order) {
+      return;
+    }
 
     foreach ($order->getItems() as $item) {
       if (!$original_order->hasItem($item)) {

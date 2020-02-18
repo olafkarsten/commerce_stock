@@ -193,7 +193,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
 
     $this->submitForm($edit, 'Save');
     $this->assertSession()->statusCodeEquals(200);
-    $this->saveHtmlOutput();
     // Check if product was created. Remember we created
     // product 1 in test setup.
     $product = Product::load(2);
@@ -222,7 +221,6 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
     ];
     $this->submitForm($edit, 'Save');
     $this->assertSession()->statusCodeEquals(200);
-    $this->saveHtmlOutput();
 
     \Drupal::entityTypeManager()->getStorage('commerce_product')->resetCache([2]);
     \Drupal::entityTypeManager()->getStorage('commerce_product_variation')->resetCache([1]);
@@ -460,7 +458,7 @@ class StockLevelWidgetsTest extends StockLevelFieldTestBase {
 
     $this->assertSession()->linkExists(t('transaction form'));
     $this->clickLink(t('transaction form'));
-    $path = '/admin/commerce/config/stock/transactions2';
+    $path = '/admin/commerce/config/stock/transactions';
     $this->assertSession()->addressEquals($path);
   }
 
