@@ -152,7 +152,8 @@ class TransactionTypeFormPluginTestForm extends FormBase {
 
     $stockService = $this->stockServiceManager->getService($productVariation);
     $context = $this->getContext($productVariation);
-    $locations = $stockService->getConfiguration()->getAvailabilityLocations($context, $productVariation);
+    $locations = $stockService->getConfiguration()
+      ->getAvailabilityLocations($context, $productVariation);
     $location_options = [];
     /** @var \Drupal\commerce_stock\StockLocationInterface $location */
     foreach ($locations as $location) {
