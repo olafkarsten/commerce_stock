@@ -4,7 +4,7 @@ namespace Drupal\commerce_stock_test\Form;
 
 use Drupal\commerce_product\ProductVariationStorage;
 use Drupal\commerce_stock\ContextCreatorTrait;
-use Drupal\commerce_stock\Plugin\StockTransactionTypesManager;
+use Drupal\commerce_stock\Plugin\StockTransactionTypesManagerInterface;
 use Drupal\commerce_stock\StockServiceManager;
 use Drupal\commerce_stock_ui\Plugin\StockTransactionTypeFormManager;
 use Drupal\Core\Form\FormBase;
